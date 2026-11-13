@@ -32,8 +32,7 @@ body {
   max-width: calc(100% - 64px);
   padding: 8px 14px;
   border-radius: 14px;
-  background: rgba(252, 250, 244, 0.72);
-  backdrop-filter: blur(6px);
+  background: rgba(252, 250, 244, 0.94);
   pointer-events: none;
 }
 
@@ -69,8 +68,8 @@ body {
   white-space: nowrap;
 }
 
-.hotspot[hidden] {
-  display: none;
+.hotspot.label {
+  pointer-events: none;
 }
 
 .hotspot .dot {
@@ -109,11 +108,35 @@ body {
   margin: 0 0 10px;
 }
 
-.card .later {
-  margin: 14px 0 0;
+.card .count {
+  margin: 0 0 4px;
   color: var(--muted);
   font-size: 0.85rem;
-  font-style: italic;
+}
+
+.steps {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+
+.steps a,
+.water-button {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.water-button {
+  position: fixed;
+  left: 50%;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  box-shadow: 0 2px 10px rgba(30, 40, 30, 0.18);
+  white-space: nowrap;
 }
 
 .close {

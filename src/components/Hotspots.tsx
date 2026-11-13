@@ -1,35 +1,58 @@
-import { useEffect, useRef } from 'react'
-import { Vector3 } from 'three'
-import { STOPS, type Stop } from '../data/stops'
+import { type RefObject, useEffect, useRef } from 'react'
+import { Object3D, Vector3 } from 'three'
+import type { Vec3 } from '../scene/camera'
 import type { SceneHandle } from '../scene/createScene'
 
-export function Hotspots({ scene, active }: { scene: SceneHandle; active: Stop | null }) {
-  const refs = useRef<(HTMLAnchorElement | null)[]>([])
+export interface Pin {
+  text: string
+  at: Vec3 | Object3D
+  href?: string
+  active?: boolean
+}
+
+interface Props {
+  scene: SceneHandle
+  pins: Pin[]
+  cover: RefObject<HTMLElement | null>
+}
+
+export function Hotspots({ scene, pins, cover }: Props) {
+  const refs = useRef<(HTMLElement | null)[]>([])
 
   useEffect(() => {
     const v = new Vector3()
     return scene.onFrame((camera, width, height) => {
-      STOPS.forEach((stop, i) => {
+      const card = cover.current?.getBoundingClientRect()
+      pins.forEach((pin, i) => {
         const el = refs.current[i]
         if (!el) return
-        v.set(...stop.anchor).project(camera)
-        el.hidden = v.z > 1
-        el.style.transform = `translate(${((v.x + 1) / 2) * width}px, ${((1 - v.y) / 2) * height}px)`
+        if (pin.at instanceof Object3D) pin.at.getWorldPosition(v)
+        else v.set(...pin.at)
+        v.project(camera)
+        const x = ((v.x + 1) / 2) * width - 11
+        const y = ((1 - v.y) / 2) * height - 18
+        const covered =
+          card && x < card.right && x + el.offsetWidth > card.left && y < card.bottom && y + el.offsetHeight > card.top
+        el.style.visibility = v.z > 1 || covered ? 'hidden' : ''
+        el.style.transform = `translate(${x}px, ${y}px)`
       })
     })
-  }, [scene])
+  }, [scene, pins, cover])
 
-  return STOPS.map((stop, i) => (
-    <a
-      key={stop.id}
-      ref={(el) => {
-        refs.current[i] = el
-      }}
-      className={stop === active ? 'hotspot active' : 'hotspot'}
-      href={`#/${stop.id}`}
-    >
-      <span className="dot" />
-      {stop.label}
-    </a>
-  ))
+  return pins.map((pin, i) => {
+    const Tag = pin.href ? 'a' : 'span'
+    return (
+      <Tag
+        key={pin.text}
+        ref={(el: HTMLElement | null) => {
+          refs.current[i] = el
+        }}
+        className={pin.active ? 'hotspot active' : pin.href ? 'hotspot' : 'hotspot label'}
+        href={pin.href}
+      >
+        <span className="dot" />
+        {pin.text}
+      </Tag>
+    )
+  })
 }
