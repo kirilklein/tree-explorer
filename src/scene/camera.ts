@@ -24,9 +24,13 @@ export function createCameraRig(camera: PerspectiveCamera, dom: HTMLElement, sta
   controls.target.set(...start.target)
   controls.enableDamping = true
   controls.enablePan = false
-  controls.minDistance = 2
-  controls.maxDistance = 34
-  controls.maxPolarAngle = Math.PI * 0.6
+  let minHeight = MIN_HEIGHT
+  function setLimits(distance: [number, number] | null) {
+    ;[controls.minDistance, controls.maxDistance] = distance ?? [2, 34]
+    controls.maxPolarAngle = distance ? Math.PI : Math.PI * 0.6
+    minHeight = distance ? -Infinity : MIN_HEIGHT
+  }
+  setLimits(null)
 
   const inset: Inset = { left: 0, bottom: 0 }
   let insetGoal: Inset = { left: 0, bottom: 0 }
@@ -49,7 +53,7 @@ export function createCameraRig(camera: PerspectiveCamera, dom: HTMLElement, sta
       }
     }
     controls.update()
-    camera.position.y = Math.max(MIN_HEIGHT, camera.position.y)
+    camera.position.y = Math.max(minHeight, camera.position.y)
 
     const k = Math.min(1, dt * 4)
     inset.left += (insetGoal.left - inset.left) * k
@@ -61,6 +65,7 @@ export function createCameraRig(camera: PerspectiveCamera, dom: HTMLElement, sta
     flyTo,
     update,
     setInset: (next: Inset) => (insetGoal = next),
+    setLimits,
     dispose: () => controls.dispose(),
   }
 }

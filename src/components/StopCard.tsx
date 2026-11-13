@@ -11,7 +11,9 @@ export function StopCard({ stop, ref }: { stop: Stop; ref: Ref<HTMLElement> }) {
       {stop.text.map((line) => (
         <p key={line}>{line}</p>
       ))}
-      <p className="later">{stop.later}</p>
+      <nav className="steps">
+        <a href={`#/${stop.id}/inside`}>Go inside</a>
+      </nav>
     </article>
   )
 }

@@ -1,7 +1,9 @@
 import {
   ACESFilmicToneMapping,
+  Color,
   DirectionalLight,
   Fog,
+  Group,
   HemisphereLight,
   MathUtils,
   type Material,
@@ -13,6 +15,7 @@ import {
   WebGLRenderer,
 } from 'three'
 import { OVERVIEW } from '../data/stops'
+import type { View, ViewInstance } from '../views/types'
 import { createCameraRig } from './camera'
 import { createGround } from './ground'
 import { generateTree } from './tree'
@@ -46,7 +49,8 @@ export function createScene(container: HTMLElement) {
   scene.add(sun)
 
   const { wood, roots, leaves } = createTreeMeshes(generateTree())
-  scene.add(wood, roots, leaves, createGround())
+  const tree = new Group().add(wood, roots, leaves, createGround())
+  scene.add(tree)
 
   const camera = new PerspectiveCamera(38, 1, 0.1, 200)
   const rig = createCameraRig(camera, renderer.domElement, OVERVIEW)
@@ -65,17 +69,45 @@ export function createScene(container: HTMLElement) {
   observer.observe(container)
   resize()
 
+  let view: { instance: ViewInstance; step: number } | null = null
+
+  function showView(next: View | null) {
+    if (view) {
+      scene.remove(view.instance.group)
+      view.instance.dispose()
+      view = null
+    }
+    tree.visible = !next
+    scene.background = null
+    rig.setLimits(null)
+    if (!next) return null
+    const instance = next.create()
+    scene.add(instance.group)
+    if (instance.background) scene.background = new Color(instance.background)
+    rig.setLimits(instance.distance ?? [1, 20])
+    view = { instance, step: 0 }
+    return instance
+  }
+
   const timer = new Timer()
   renderer.setAnimationLoop((time) => {
     timer.update(time)
-    windTime.value = timer.getElapsed()
-    rig.update(Math.min(timer.getDelta(), 0.1), width, height)
+    const dt = Math.min(timer.getDelta(), 0.1)
+    if (view) view.instance.update(dt, view.step)
+    else windTime.value = timer.getElapsed()
+    rig.update(dt, width, height)
     renderer.render(scene, camera)
     for (const listener of listeners) listener(camera, width, height)
   })
 
   return {
     flyTo: rig.flyTo,
+    showView,
+    showStep(step: number) {
+      if (!view) return
+      view.step = step
+      rig.flyTo(view.instance.poses[step])
+    },
     setInset: rig.setInset,
     onFrame(listener: FrameListener) {
       listeners.add(listener)
@@ -83,6 +115,7 @@ export function createScene(container: HTMLElement) {
     },
     dispose() {
       renderer.setAnimationLoop(null)
+      showView(null)
       observer.disconnect()
       rig.dispose()
       scene.traverse((object) => {
