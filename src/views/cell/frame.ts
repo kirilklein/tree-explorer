@@ -6,6 +6,7 @@ export type LeafSite = Sites['leaf']
 export const C = 0.0003
 export const NOTCH = { half: 6 * C, depth: 4 * C }
 export const BLOCK = { half: 10 * C, back: 6 * C }
+export const THICKNESS = 6.1 * C
 export const COLS = 5
 export const ROWS = 8
 

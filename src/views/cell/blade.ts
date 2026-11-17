@@ -58,6 +58,54 @@ function subdivide(source: BufferGeometry) {
   return geometry
 }
 
+/** The upper sheet, and the lower sheet joined to it by a rim, so the blade is as thick as its tissue. */
+function thicken(source: BufferGeometry, sheet: BufferGeometry, half: number) {
+  const position = sheet.getAttribute('position')
+  const normal = sheet.getAttribute('normal')
+  const upper = sheet.clone()
+  const raised = upper.getAttribute('position')
+  const positions: number[] = []
+  const normals: number[] = []
+  const uvs = [...(sheet.getAttribute('uv').array as Float32Array)]
+  const [p, n] = [new Vector3(), new Vector3()]
+  for (let i = 0; i < position.count; i++) {
+    p.fromBufferAttribute(position, i)
+    n.fromBufferAttribute(normal, i)
+    raised.setXYZ(i, ...p.clone().addScaledVector(n, half).toArray())
+    positions.push(...p.addScaledVector(n, -half).toArray())
+    normals.push(...n.negate().toArray())
+  }
+  const index = source.getIndex()!
+  const corners = source.getAttribute('position')
+  const facing = source.getAttribute('normal')
+  const uses = new Map<string, [number, number, number]>()
+  for (let k = 0; k < index.count; k += 3) {
+    for (const o of [0, 1, 2]) {
+      const [a, b] = [index.getX(k + o), index.getX(k + ((o + 1) % 3))]
+      const key = `${Math.min(a, b)}-${Math.max(a, b)}`
+      uses.set(key, [a, b, (uses.get(key)?.[2] ?? 0) + 1])
+    }
+  }
+  for (const [a, b, count] of uses.values()) {
+    if (count > 1) continue
+    const [top, bottom] = [half, -half].map((h) =>
+      [a, b].map((v) => new Vector3().fromBufferAttribute(corners, v).addScaledVector(n.fromBufferAttribute(facing, v), h)),
+    )
+    const out = top[1].clone().sub(top[0]).cross(n.fromBufferAttribute(facing, a)).normalize()
+    const uv = (v: number) => [(v % COLS) / (COLS - 1), Math.floor(v / COLS) / ROWS]
+    for (const [q, v] of [[top[0], a], [top[1], b], [bottom[1], b], [top[0], a], [bottom[1], b], [bottom[0], a]] as const) {
+      positions.push(...q.toArray())
+      normals.push(...out.toArray())
+      uvs.push(...uv(v))
+    }
+  }
+  const under = new BufferGeometry()
+  under.setAttribute('position', new Float32BufferAttribute(positions, 3))
+  under.setAttribute('normal', new Float32BufferAttribute(normals, 3))
+  under.setAttribute('uv', new Float32BufferAttribute(uvs, 2))
+  return { upper, under }
+}
+
 function veinTexture() {
   const size = 1024
   const canvas = document.createElement('canvas')
@@ -100,16 +148,17 @@ function veinTexture() {
   return { texture, vein: veins[6][1] }
 }
 
-export function createBlade(leaves: InstancedMesh, index: number, cut: Plane[]) {
+export function createBlade(leaves: InstancedMesh, index: number, cut: Plane[], half: number) {
   const color = new Color()
   leaves.getColorAt(index, color)
-  const geometry = subdivide(leaves.geometry)
+  const { upper: geometry, under } = thicken(leaves.geometry, subdivide(leaves.geometry), half)
   const base = { side: DoubleSide, roughness: 0.75, transparent: true, polygonOffset: true, clippingPlanes: cut, clipIntersection: true }
   const blade = new Mesh(
     geometry,
     new MeshStandardMaterial({ ...base, color, emissive: color, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }),
   )
   blade.castShadow = true
+  const underside = new Mesh(under, blade.material)
   const { texture, vein } = veinTexture()
   const veins = new Mesh(
     geometry,
@@ -129,7 +178,7 @@ export function createBlade(leaves: InstancedMesh, index: number, cut: Plane[]) 
     new CylinderGeometry(0.006, 0.009, 0.17, 12).translate(0, -0.085, 0).rotateX(0.12),
     new MeshStandardMaterial({ color: light, emissive: light, emissiveIntensity: 0.2, roughness: 0.6, transparent: true }),
   )
-  const group = new Group().add(blade, veins, midrib, stalk)
+  const group = new Group().add(blade, underside, veins, midrib, stalk)
   const point = (x: number, y: number, z: number) => {
     const o = new Object3D()
     o.position.set(x, y, z)
@@ -147,7 +196,7 @@ export function createBlade(leaves: InstancedMesh, index: number, cut: Plane[]) 
     },
     update(detail: number) {
       const plain = smooth(detail * 2)
-      fade([blade], plain)
+      fade([blade, underside], plain)
       fade([veins, midrib, stalk], smooth(detail * 2 - 1))
       ;(blade.material as MeshStandardMaterial).emissiveIntensity = 0.15 * smooth(detail * 2 - 1)
       return plain === 1

@@ -166,7 +166,7 @@ export function createTissue() {
     const group = new Group()
     for (const { list, geometry, color, map } of kinds) {
       const material = paint(color, { transparent: true, ...(map && { map, emissiveMap: map }) })
-      group.add(instanced(geometry, material, list.filter((p) => inNotch(p.at) === notch)))
+      group.add(instanced(geometry, material, list.filter((p) => inNotch(p.at) === notch && (notch || p.at.z < NOTCH.depth - 0.7 * C))))
     }
     return group
   }
