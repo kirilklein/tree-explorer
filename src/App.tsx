@@ -77,7 +77,7 @@ export default function App() {
       <div className="scene" ref={mountRef} />
       <header className="title">
         <h1>Tree Explorer</h1>
-        <p>Drag to look around. Click a label to zoom in.</p>
+        <p>{route.view ? 'Drag to look around.' : 'Drag to look around. Click a label to zoom in.'}</p>
       </header>
       {scene && <Hotspots scene={scene} pins={pins} cover={cardRef} />}
       {route.view

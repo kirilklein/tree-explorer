@@ -77,6 +77,10 @@ body {
 
 .hotspot.label {
   pointer-events: none;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: none;
+  font-weight: 500;
+  font-size: 0.85rem;
 }
 
 .hotspot .dot {
@@ -85,6 +89,12 @@ body {
   border: 5px solid #e3efd9;
   border-radius: 50%;
   background: var(--accent);
+}
+
+.hotspot.label .dot {
+  border-color: transparent;
+  background: var(--ink);
+  transform: scale(0.6);
 }
 
 .hotspot:hover,
