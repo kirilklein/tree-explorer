@@ -248,8 +248,9 @@ export function createTubes(frame: Frame, radius: number) {
     for (const { mesh, paths, speed, jitter } of moving) {
       const each = mesh.count / paths.length
       for (let i = 0; i < mesh.count; i++) {
-        const path = paths[Math.floor(i / each)]
-        const d = (time * speed + ((i % each) / each) * path.length + i * 0.37 * C * jitter) % path.length
+        const lane = Math.floor(i / each)
+        const path = paths[lane]
+        const d = (time * speed + (((i % each) + lane / paths.length) / each) * path.length + i * 0.37 * C * jitter) % path.length
         along(path, d, p).addScaledVector(offsets[i], jitter)
         mesh.setMatrixAt(i, m.compose(p, q, one.setScalar(fade(d) * fade(path.length - d))))
       }
@@ -268,10 +269,10 @@ export function createTubes(frame: Frame, radius: number) {
       tracheid: world(xB, 1.6, woodZ),
       pit: world((xA + xB) / 2, PITS[0], woodZ),
       water: world(xC, 3.4, woodZ),
-      sieve: world(xS, 3.9, phloemZ),
+      sieve: world(xS, 4.7, phloemZ),
       plate: world(xS, PLATES[0], phloemZ),
       companion: world(xK, 1.2, phloemZ),
-      sugar: world(xS, 1.3, phloemZ),
+      sugar: world(xS, 3.4, phloemZ),
     },
   }
 }
