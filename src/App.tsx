@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Hotspots, type Pin } from './components/Hotspots'
 import { StepCard } from './components/StepCard'
 import { StopCard } from './components/StopCard'
-import { OVERVIEW, STOPS } from './data/stops'
+import { STOPS } from './data/stops'
 import { parseRoute } from './route'
 import { createScene, type SceneHandle } from './scene/createScene'
 import { VIEWS } from './views'
@@ -13,6 +13,7 @@ export default function App() {
   const cardRef = useRef<HTMLElement>(null)
   const [scene, setScene] = useState<SceneHandle | null>(null)
   const [route, setRoute] = useState(() => parseRoute(location.hash))
+  const [settled, setSettled] = useState(true)
   const [active, setActive] = useState<{ view: View; instance: ViewInstance } | null>(null)
   const { stop } = route
   const view = active?.view
@@ -24,6 +25,8 @@ export default function App() {
     setScene(handle)
     return handle.dispose
   }, [])
+
+  useEffect(() => scene?.onSettle(setSettled), [scene])
 
   useEffect(() => {
     const onHash = () => setRoute(parseRoute(location.hash))
@@ -45,10 +48,10 @@ export default function App() {
     }
   }, [scene, viewId])
 
-  useEffect(() => {
-    if (instance) scene?.showStep(step)
-    else scene?.flyTo(stop?.pose ?? OVERVIEW)
-  }, [scene, instance, step, stop])
+  useLayoutEffect(() => {
+    if (!viewId) scene?.showStop(stop)
+    else if (instance) scene?.showStep(step)
+  }, [scene, instance, step, stop, viewId])
 
   useEffect(() => {
     if (!scene) return
@@ -64,10 +67,10 @@ export default function App() {
   }, [scene, route, view])
 
   const pins = useMemo<Pin[]>(() => {
-    if (instance) return (instance.labels ?? []).filter((label) => !label.steps || label.steps.includes(step))
-    if (route.view) return []
-    return STOPS.map((s) => ({ text: s.label, at: s.anchor, href: `#/${s.id}`, active: s === stop }))
-  }, [instance, step, route.view, stop])
+    if (instance) return settled ? (instance.labels ?? []).filter((label) => !label.steps || label.steps.includes(step)) : []
+    if (!scene || route.view || !settled) return []
+    return STOPS.map((s) => ({ text: s.label, at: s.anchor ?? scene.rootLabel, href: `#/${s.id}`, active: s === stop }))
+  }, [scene, instance, step, route.view, stop, settled])
 
   return (
     <>
@@ -78,9 +81,18 @@ export default function App() {
       </header>
       {scene && <Hotspots scene={scene} pins={pins} cover={cardRef} />}
       {route.view
-        ? view && <StepCard key={`${route.view}/${step}`} steps={view.steps} step={step} stop={stop} ref={cardRef} />
-        : stop && <StopCard key={stop.id} stop={stop} ref={cardRef} />}
-      {!stop && !route.view && (
+        ? view && (
+            <StepCard
+              key={`${route.view}/${step}`}
+              steps={view.steps}
+              step={step}
+              stop={stop}
+              waiting={!settled}
+              ref={cardRef}
+            />
+          )
+        : stop && <StopCard key={stop.id} stop={stop} waiting={!settled} ref={cardRef} />}
+      {!stop && !route.view && settled && (
         <a className="water-button" href="#/water">
           Follow the water
         </a>

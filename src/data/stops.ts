@@ -4,8 +4,8 @@ import type { ViewId } from '../views'
 export interface Stop {
   id: 'leaves' | 'trunk' | 'roots'
   label: string
-  anchor: Vec3
-  pose: Pose
+  anchor?: Vec3
+  pose?: Pose
   text: string[]
   view: ViewId
 }
@@ -40,8 +40,6 @@ export const STOPS: Stop[] = [
   {
     id: 'roots',
     label: 'Roots',
-    anchor: [2, -1.2, 2],
-    pose: { position: [8.5, 1.6, 10], target: [1.8, -1.5, 1.8] },
     text: [
       'Roots anchor the tree in the ground and take up water and minerals from the soil.',
       'Most of this uptake happens through fine root hairs near the root tips, usually helped by fungi that live on the roots.',

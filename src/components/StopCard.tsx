@@ -1,9 +1,15 @@
 import type { Ref } from 'react'
 import type { Stop } from '../data/stops'
 
-export function StopCard({ stop, ref }: { stop: Stop; ref: Ref<HTMLElement> }) {
+interface Props {
+  stop: Stop
+  waiting: boolean
+  ref: Ref<HTMLElement>
+}
+
+export function StopCard({ stop, waiting, ref }: Props) {
   return (
-    <article className="card" ref={ref}>
+    <article className={waiting ? 'card waiting' : 'card'} ref={ref}>
       <a className="close" href="#/" aria-label="Back to the whole tree">
         ×
       </a>

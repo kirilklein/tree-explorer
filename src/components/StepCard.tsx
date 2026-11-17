@@ -6,15 +6,16 @@ interface Props {
   steps: Step[]
   step: number
   stop: Stop | null
+  waiting: boolean
   ref: Ref<HTMLElement>
 }
 
-export function StepCard({ steps, step, stop, ref }: Props) {
+export function StepCard({ steps, step, stop, waiting, ref }: Props) {
   const base = stop ? `#/${stop.id}/inside` : '#/water'
   const href = (i: number) => (i === 0 ? base : `${base}/${i + 1}`)
   const { title, text } = steps[step]
   return (
-    <article className="card" ref={ref}>
+    <article className={waiting ? 'card waiting' : 'card'} ref={ref}>
       <a className="close" href={stop ? `#/${stop.id}` : '#/'} aria-label="Close">
         ×
       </a>
