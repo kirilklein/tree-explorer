@@ -8,8 +8,9 @@ import { createBlock } from './block'
 import { createCut, cutPlanes } from './cut'
 import { CEILING, FLOOR, surfaceOf, trunkFrame } from './frame'
 import { cellsAt, LOOP, PARENCHYMA_ROWS, ROWS, WINDOW_INNER } from './growth'
-import { layersOf } from './layers'
+import { CELL, layersOf } from './layers'
 import { sectionPoses } from './poses'
+import { createTubes, PITS, SIEVE_HEIGHT, TRACHEIDS } from './tubes'
 
 const { wood } = createTreeMeshes(TREE, new Set(SITES.root.featured.segments))
 wood.material.side = DoubleSide
@@ -133,6 +134,40 @@ describe('the cells', () => {
         expect(out.length()).toBeLessThan(surface(frame.at(h), out.clone().normalize()))
       }
     }
+  })
+})
+
+describe('the raised cells', () => {
+  const tubes = createTubes(frame, radius)
+  const height = (p: Vector3) => (radial(p).h - FLOOR) / CELL
+
+  it('carry water up, from one tracheid to the next only at a pit', () => {
+    for (const path of tubes.waterPaths) {
+      path.slice(1).forEach((p, i) => {
+        const rise = height(p) - height(path[i])
+        expect(rise).toBeGreaterThan(-1e-6)
+        if (rise < 1e-6) expect(PITS.some((pit) => Math.abs(height(p) - pit) < 1e-6)).toBe(true)
+      })
+    }
+    expect(Math.max(...PITS)).toBeLessThan(TRACHEIDS[1].height)
+    expect(PITS[0]).toBeLessThan(TRACHEIDS[0].height)
+  })
+
+  it('carry sugar straight down', () => {
+    for (const [from, to] of tubes.sugarPaths) {
+      expect(height(to)).toBeLessThan(height(from))
+      expect(radial(to).out.distanceTo(radial(from).out)).toBeLessThan(1e-9)
+    }
+  })
+
+  it('stay in the window and inside the bark', () => {
+    const tops = [...tubes.waterPaths, ...tubes.sugarPaths].flat()
+    for (const p of [...tops, ...Object.values(tubes.points)]) {
+      const { h, out } = radial(p)
+      expect(h).toBeLessThan(CEILING)
+      expect(out.length()).toBeLessThan(surface(frame.at(h), out.clone().normalize()))
+    }
+    expect(FLOOR + Math.max(SIEVE_HEIGHT, ...TRACHEIDS.map((t) => t.height)) * CELL).toBeLessThan(CEILING)
   })
 })
 
