@@ -5,6 +5,7 @@ import { createHyphae } from './hyphae'
 import { createParticles } from './particles'
 import { rockPoses } from './poses'
 import { createTip } from './tip'
+import { createUptake } from './uptake'
 
 const view: View = {
   steps: [
@@ -41,6 +42,23 @@ const view: View = {
         "In the pine study, the fungus sent more of the tree's sugar to grains rich in calcium and magnesium than to quartz.",
       ],
     },
+    {
+      title: 'A root hair takes in water',
+      text: [
+        "A root hair is an extension of one cell of the root's outer layer, the epidermis.",
+        "Water moves from the soil into the root's cells by osmosis.",
+        "The root hairs enlarge the root's surface, which greatly helps it absorb water and minerals.",
+      ],
+    },
+    {
+      title: 'The checkpoint',
+      text: [
+        'Inside the root, the water crosses the cortex and reaches a ring of cells, the endodermis.',
+        'A waxy band in the walls of these cells, the Casparian strip, stops water from slipping between them. It has to pass through the cells.',
+        "So the endodermis is a checkpoint for what enters the root's vascular tissue.",
+        'Inside the ring, the xylem carries the water up into the tree.',
+      ],
+    },
   ],
   create(world) {
     const site = { ...world.sites.root, stone: world.stone }
@@ -53,7 +71,8 @@ const view: View = {
       particles.contactParts,
       particles.streamParts,
     ]
-    const group = new Group().add(...byStep.flat())
+    const uptake = createUptake(site, world.featuredRoot, tip.hairs, tip.grains)
+    const group = new Group().add(...byStep.flat(), uptake.group)
     const shown = byStep.map(() => 0)
     return {
       group,
@@ -71,12 +90,19 @@ const view: View = {
         { text: 'Calcium oxalate crystals', at: particles.crystalPoint.toArray(), steps: [2] },
         { text: 'Minerals', at: particles.mineralPoint.toArray(), steps: [3] },
         { text: 'Sugars', at: particles.sugarPoint.toArray(), steps: [3] },
+        { text: 'Root hair', at: uptake.points.hair.toArray(), steps: [4] },
+        { text: 'Water', at: uptake.points.hairTip.toArray(), steps: [4] },
+        { text: 'Epidermis', at: uptake.points.epidermis.toArray(), steps: [5] },
+        { text: 'Cortex', at: uptake.points.cortex.toArray(), steps: [5] },
+        { text: 'Endodermis', at: uptake.points.endodermis.toArray(), steps: [5] },
+        { text: 'Casparian strip', at: uptake.points.strip.toArray(), steps: [5] },
+        { text: 'Xylem', at: uptake.points.xylem.toArray(), steps: [5] },
       ],
       update(dt, step, camera) {
         particles.update(dt)
         const near = 1 - Math.min(1, Math.max(0, (camera.position.distanceTo(site.tip) - 0.9) / 1.1))
         byStep.forEach((meshes, i) => {
-          const wanted = i === 0 ? 1 : i === 1 ? Number(step >= 1) : Number(step === i)
+          const wanted = i === 0 ? 1 : i === 1 ? Number(step >= 1 && step <= 3) : Number(step === i)
           shown[i] += (wanted - shown[i]) * Math.min(1, dt * 2.5)
           for (const mesh of meshes) {
             const material = mesh.material as Material
@@ -84,8 +110,10 @@ const view: View = {
             mesh.visible = material.opacity > 0.01
           }
         })
+        uptake.update(dt, step >= 4, step >= 5, near)
       },
       dispose() {
+        uptake.restore()
         group.traverse((object) => {
           if (object instanceof Mesh) {
             object.geometry.dispose()
