@@ -153,6 +153,12 @@ body {
   text-decoration: none;
 }
 
+.steps a.home {
+  background: none;
+  color: var(--muted);
+  font-weight: 500;
+}
+
 .water-button {
   position: fixed;
   left: 50%;
