@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { generateTree, MAX_LEAVES } from './tree'
+import { featuredRoot, generateTree, MAX_LEAVES } from './tree'
 
 describe('generateTree', () => {
   const tree = generateTree(7)
@@ -27,5 +27,15 @@ describe('generateTree', () => {
       expect(root.end.y).toBeLessThan(0)
     }
     for (const leaf of tree.leaves) expect(leaf.position.y).toBeGreaterThan(0)
+  })
+
+  it('features a fork buried just behind the cut face, on a root that starts at the face', () => {
+    const { stem, fork, branch } = featuredRoot(tree.roots)
+    expect(stem.at(-1)).toBe(fork)
+    expect(branch[0]).toBe(fork)
+    expect(branch.length).toBeGreaterThan(2)
+    expect(fork.z).toBeGreaterThan(0)
+    expect(fork.x).toBeLessThan(-0.2)
+    expect(stem[0].x).toBeGreaterThan(-0.24)
   })
 })
