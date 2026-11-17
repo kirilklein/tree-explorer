@@ -182,6 +182,10 @@ const trunkClearance = (p: Vector3) =>
       }),
   )
 
+const windowPlanes = cutPlanes(frame)
+windowPlanes.update(1)
+const windowClearance = (p: Vector3) => -Math.max(...windowPlanes.planes.slice(0, 4).map((plane) => plane.distanceToPoint(p)))
+
 describe('every descent move', () => {
   const all: ShotPose[] = [SITES.trunk.shot.arrival, ...poses]
   const moves = all.slice(1).flatMap((to, i) => [[all[i], to], [to, all[i]]])
@@ -192,13 +196,13 @@ describe('every descent move', () => {
     })
   })
 
-  it.each(moves.map((m, i) => [i, m] as const))('move %i stays outside the trunk', (_, [from, to]) => {
+  it.each(moves.map((m, i) => [i, m] as const))('move %i stays outside the trunk or in its window', (_, [from, to]) => {
     for (let i = 0; i <= 300; i++) {
       const { position, target } = ratioZoom(from, to, i / 300)
       const distance = position.distanceTo(target)
       const margin = nearFor(distance)
       expect(margin).toBeLessThan(distance)
-      expect(trunkClearance(position)).toBeGreaterThan(margin)
+      expect(Math.max(trunkClearance(position), windowClearance(position))).toBeGreaterThan(margin)
     }
   })
 })
