@@ -1,6 +1,6 @@
 import { type CatmullRomCurve3, Vector3 } from 'three'
 import type { ShotPose } from '../../scene/shot'
-import type { Site } from '../types'
+import type { Site } from './frame'
 
 const UP = new Vector3(0, 1, 0)
 

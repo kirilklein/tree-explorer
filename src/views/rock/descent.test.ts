@@ -2,20 +2,21 @@ import { Line3, Raycaster, Vector3 } from 'three'
 import { describe, expect, it } from 'vitest'
 import { nearFor, ratioZoom } from '../../scene/camera'
 import { createGround } from '../../scene/ground'
-import { planShot, type ShotPose, wallsAt } from '../../scene/shot'
-import { featuredRoot, generateTree, rootTip, SOIL_DEPTH, SOIL_HALF_SIZE } from '../../scene/tree'
-import type { Site } from '../types'
+import type { ShotPose } from '../../scene/shot'
+import { wallsAt } from '../../scene/shot'
+import { SITES, TREE as tree } from '../../scene/sites'
+import { SOIL_DEPTH, SOIL_HALF_SIZE } from '../../scene/tree'
+import type { Site } from './frame'
 import { createHyphae } from './hyphae'
 import { rockPoses } from './poses'
 
-const tree = generateTree()
-const featured = featuredRoot(tree.roots)
-const plan = planShot(featured)
-const { stone } = createGround(plan.wall)
-const site: Site = { ...rootTip(featured), stone }
+const root = SITES.root
+const peel = root.shot.peel!
+const { stone } = createGround(peel.wall)
+const site: Site = { ...root, stone }
 const fungus = createHyphae(site)
 const steps = rockPoses(site, fungus.featured, fungus.contact, fungus.normal)
-const closeUp: ShotPose = { position: plan.position, target: plan.target }
+const closeUp: ShotPose = root.shot.arrival
 
 const LAYER_BOTTOMS = [-0.22, -1.1, -2.2, -3.0]
 const inSoil = (p: Vector3, walls: number[], margin: number) =>
@@ -51,10 +52,10 @@ function stoneClearance(p: Vector3) {
 
 describe('the featured tip and stone', () => {
   it('ends the featured branch, thin and in the open cutaway', () => {
-    const { tip, radius } = rootTip(featured)
-    expect(tip).toBe(featured.branch.at(-1))
+    const { tip, radius } = root
+    expect(tip).toBe(root.featured.branch.at(-1))
     expect(radius).toBeLessThan(0.05)
-    expect(inSoil(tip, wallsAt(plan, 1, 1), radius)).toBe(false)
+    expect(inSoil(tip, wallsAt(peel, 1, 1), radius)).toBe(false)
   })
 
   it('sends the featured hypha from the root to the stone', () => {
@@ -102,7 +103,7 @@ describe('every descent move', () => {
       const distance = position.distanceTo(target)
       const margin = nearFor(distance)
       expect(margin).toBeLessThan(distance)
-      expect(inSoil(position, wallsAt(plan, 1, o0 + (o1 - o0) * t), margin)).toBe(false)
+      expect(inSoil(position, wallsAt(peel, 1, o0 + (o1 - o0) * t), margin)).toBe(false)
       expect(woodClearance(position)).toBeGreaterThan(margin)
       expect(stoneClearance(position)).toBeGreaterThan(margin)
     }

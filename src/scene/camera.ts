@@ -1,4 +1,4 @@
-import { type PerspectiveCamera, Quaternion, Vector3 } from 'three'
+import { type PerspectiveCamera, Quaternion } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { ShotPose } from './shot'
 
@@ -9,12 +9,13 @@ export interface Pose {
   target: Vec3
 }
 
+export const OVERVIEW: Pose = { position: [17, 6, 23], target: [0, 2.4, 0] }
+
 export interface Inset {
   left: number
   bottom: number
 }
 
-const FLIGHT_SECONDS = 1.6
 const MIN_HEIGHT = -2.2
 
 export const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
@@ -50,32 +51,14 @@ export function createCameraRig(camera: PerspectiveCamera, dom: HTMLElement, sta
 
   const inset: Inset = { left: 0, bottom: 0 }
   let insetGoal: Inset = { left: 0, bottom: 0 }
-  let flight: { fromPosition: Vector3; fromTarget: Vector3; to: Pose; elapsed: number } | null = null
-
   let held: ShotPose | null = null
 
   function hold(pose: ShotPose | null) {
     held = pose
-    flight = null
     controls.enabled = !pose
   }
 
-  function flyTo(pose: Pose) {
-    flight = { fromPosition: camera.position.clone(), fromTarget: controls.target.clone(), to: pose, elapsed: 0 }
-    controls.enabled = false
-  }
-
   function update(dt: number, width: number, height: number) {
-    if (flight) {
-      flight.elapsed += dt
-      const t = ease(Math.min(1, flight.elapsed / FLIGHT_SECONDS))
-      camera.position.lerpVectors(flight.fromPosition, new Vector3(...flight.to.position), t)
-      controls.target.lerpVectors(flight.fromTarget, new Vector3(...flight.to.target), t)
-      if (t === 1) {
-        flight = null
-        controls.enabled = true
-      }
-    }
     controls.update()
     if (held) {
       camera.position.copy(held.position)
@@ -91,7 +74,6 @@ export function createCameraRig(camera: PerspectiveCamera, dom: HTMLElement, sta
   }
 
   return {
-    flyTo,
     hold,
     pose: (): ShotPose => ({ position: camera.position.clone(), target: controls.target.clone() }),
     update,

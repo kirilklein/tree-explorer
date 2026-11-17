@@ -7,7 +7,6 @@ import { rockPoses } from './poses'
 import { createTip } from './tip'
 
 const view: View = {
-  anchored: true,
   steps: [
     {
       title: 'A root tip and its root hairs',
@@ -43,7 +42,8 @@ const view: View = {
       ],
     },
   ],
-  create(site) {
+  create(world) {
+    const site = { ...world.sites.root, stone: world.stone }
     const tip = createTip(site)
     const fungus = createHyphae(site)
     const particles = createParticles(fungus.featured, fungus.contact, fungus.normal)
@@ -57,6 +57,7 @@ const view: View = {
     const shown = byStep.map(() => 0)
     return {
       group,
+      soil: 1,
       poses: rockPoses(site, fungus.featured, fungus.contact, fungus.normal).map(
         (p): Pose => ({ position: p.position.toArray(), target: p.target.toArray() }),
       ),

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { featuredRoot, generateTree, MAX_LEAVES } from './tree'
+import { featuredRoot } from './sites/root'
+import { generateTree, MAX_LEAVES } from './tree'
 
 describe('generateTree', () => {
   const tree = generateTree(7)

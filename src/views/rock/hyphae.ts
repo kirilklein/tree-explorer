@@ -1,8 +1,7 @@
 import { CatmullRomCurve3, Matrix3, Mesh, MeshStandardMaterial, Raycaster, TubeGeometry, Vector3 } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { mulberry32 } from '../../scene/tree'
-import type { Site } from '../types'
-import { rootFrame } from './frame'
+import { rootFrame, type Site } from './frame'
 
 export const HYPHA_RADIUS = 0.00018
 
