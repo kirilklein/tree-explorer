@@ -9,6 +9,7 @@ import { SOIL_DEPTH, SOIL_HALF_SIZE } from '../../scene/tree'
 import type { Site } from './frame'
 import { createHyphae } from './hyphae'
 import { rockPoses } from './poses'
+import { FILES, HAIR_FILE, RINGS, waterPath } from './uptake'
 
 const root = SITES.root
 const peel = root.shot.peel!
@@ -61,6 +62,26 @@ describe('the featured tip and stone', () => {
   it('sends the featured hypha from the root to the stone', () => {
     expect(fungus.contact.distanceTo(site.tip)).toBeGreaterThan(0.05)
     expect(stoneClearance(fungus.contact.clone().addScaledVector(fungus.normal, 1e-4))).toBeGreaterThanOrEqual(0)
+  })
+})
+
+describe('the water entering the root', () => {
+  const path = waterPath(0.5)
+  const polar = path.map((p) => ({ rho: Math.hypot(p.x, p.y), angle: Math.atan2(p.y, p.x) }))
+  const step = Math.PI / FILES
+  const file = (angle: number) => (angle + Math.PI / 2) / step - 0.5
+
+  it('moves inward all the way from the hair to the xylem', () => {
+    polar.slice(2).forEach((p, i) => expect(p.rho).toBeLessThanOrEqual(polar[i + 1].rho + 1e-9))
+    expect(polar.at(-1)!.rho).toBeLessThan(RINGS.stele)
+  })
+
+  it('slips between the cortex cells but crosses the endodermis through a cell', () => {
+    const inCortex = polar.filter((p) => p.rho < RINGS.cortex + 1e-9 && p.rho > RINGS.endodermis + 0.03)
+    for (const p of inCortex) expect(Math.abs(file(p.angle) - Math.round(file(p.angle)))).toBeCloseTo(0.5, 6)
+    const inside = polar.findIndex((p) => p.rho < RINGS.stele)
+    expect(polar[inside - 1].rho).toBeGreaterThan(RINGS.endodermis)
+    for (const p of [polar[inside - 1], polar[inside]]) expect(file(p.angle)).toBeCloseTo(HAIR_FILE, 6)
   })
 })
 
