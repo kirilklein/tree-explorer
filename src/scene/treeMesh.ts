@@ -10,15 +10,18 @@ import {
   MeshStandardMaterial,
   Vector3,
 } from 'three'
+import { BARK_TILE } from './bark'
 import { chains, type Segment, type Tree } from './tree'
 import { addWind } from './wind'
 
 const RADIAL = 10
+const RING = RADIAL + 1
 
 function woodGeometry(segments: Segment[]): BufferGeometry {
   const positions: number[] = []
   const normals: number[] = []
   const sway: number[] = []
+  const uvs: number[] = []
   const indices: number[] = []
   const normal = new Vector3()
   const binormal = new Vector3()
@@ -30,6 +33,8 @@ function woodGeometry(segments: Segment[]): BufferGeometry {
     const radii = [chain[0].startRadius, ...chain.map((s) => s.endRadius)]
     const sways = [chain[0].startSway, ...chain.map((s) => s.endSway)]
     const base = positions.length / 3
+    const around = Math.max(1, Math.round((2 * Math.PI * radii[0]) / BARK_TILE.around))
+    let along = 0
 
     tangent.subVectors(points[1], points[0]).normalize()
     normal.set(0, 0, 1).cross(tangent)
@@ -42,20 +47,22 @@ function woodGeometry(segments: Segment[]): BufferGeometry {
       tangent.subVectors(after, before).normalize()
       normal.addScaledVector(tangent, -normal.dot(tangent)).normalize()
       binormal.crossVectors(tangent, normal)
-      for (let k = 0; k < RADIAL; k++) {
+      along += p.distanceTo(before)
+      for (let k = 0; k <= RADIAL; k++) {
         const a = (k / RADIAL) * Math.PI * 2
         radial.copy(normal).multiplyScalar(Math.cos(a)).addScaledVector(binormal, Math.sin(a))
         positions.push(p.x + radial.x * radii[i], p.y + radial.y * radii[i], p.z + radial.z * radii[i])
         normals.push(radial.x, radial.y, radial.z)
         sway.push(sways[i])
+        uvs.push((k / RADIAL) * around, along / BARK_TILE.along)
       }
     })
 
     for (let i = 0; i < points.length - 1; i++) {
       for (let k = 0; k < RADIAL; k++) {
-        const a = base + i * RADIAL + k
-        const b = base + i * RADIAL + ((k + 1) % RADIAL)
-        indices.push(a, b, a + RADIAL, b, b + RADIAL, a + RADIAL)
+        const a = base + i * RING + k
+        const b = a + 1
+        indices.push(a, b, a + RING, b, b + RING, a + RING)
       }
     }
 
@@ -66,9 +73,10 @@ function woodGeometry(segments: Segment[]): BufferGeometry {
       positions.push(points[i].x, points[i].y, points[i].z)
       normals.push(tangent.x, tangent.y, tangent.z)
       sway.push(sways[i])
+      uvs.push(0, 0)
       for (let k = 0; k < RADIAL; k++) {
-        const a = base + i * RADIAL + k
-        const b = base + i * RADIAL + ((k + 1) % RADIAL)
+        const a = base + i * RING + k
+        const b = a + 1
         indices.push(...(flip ? [center, b, a] : [center, a, b]))
       }
     }
@@ -78,6 +86,7 @@ function woodGeometry(segments: Segment[]): BufferGeometry {
   geometry.setAttribute('position', new Float32BufferAttribute(positions, 3))
   geometry.setAttribute('normal', new Float32BufferAttribute(normals, 3))
   geometry.setAttribute('aSway', new Float32BufferAttribute(sway, 1))
+  geometry.setAttribute('uv', new Float32BufferAttribute(uvs, 2))
   geometry.setIndex(indices)
   return geometry
 }

@@ -7,6 +7,8 @@ const HEIGHTS = 12
 const INNER = 28
 const OUTER = 10
 const COLUMNS = INNER + OUTER + 1
+/** Angle steps after which the floor's texture turns back on itself. */
+const TILE = 8
 
 export function createCut(frame: Frame, surface: Surface, radius: number) {
   const { a, at, dir } = frame
@@ -38,7 +40,7 @@ export function createCut(frame: Frame, surface: Surface, radius: number) {
   geometry.setAttribute('uv', uv)
   geometry.setIndex(indices)
 
-  const fillRow = (row: number, phi: number, h: number, facing: Vector3) => {
+  const fillRow = (row: number, phi: number, h: number, facing: Vector3, v: number) => {
     const origin = at(h)
     const out = dir(phi)
     const rim = surface(origin, out)
@@ -50,7 +52,7 @@ export function createCut(frame: Frame, surface: Surface, radius: number) {
       const p = origin.clone().addScaledVector(out, rho)
       position.setXYZ(i, p.x, p.y, p.z)
       normal.setXYZ(i, facing.x, facing.y, facing.z)
-      uv.setXY(i, u, 0.5)
+      uv.setXY(i, u, v)
     }
   }
 
@@ -59,11 +61,11 @@ export function createCut(frame: Frame, surface: Surface, radius: number) {
     const down = a.clone().negate()
     let row = 0
     for (const [h, facing] of [[FLOOR, a], [CEILING, down]] as const) {
-      for (let i = 0; i <= ANGLES; i++) fillRow(row++, -alpha + (2 * alpha * i) / ANGLES, h, facing)
+      for (let i = 0; i <= ANGLES; i++) fillRow(row++, -alpha + (2 * alpha * i) / ANGLES, h, facing, 0.02 + 0.46 * Math.abs(((i / TILE) % 2) - 1))
     }
     for (const side of [1, -1]) {
       const facing = frame.n.clone().multiplyScalar(Math.sin(alpha)).addScaledVector(frame.s, -side * Math.cos(alpha))
-      for (let j = 0; j <= HEIGHTS; j++) fillRow(row++, side * alpha, FLOOR + ((CEILING - FLOOR) * j) / HEIGHTS, facing)
+      for (let j = 0; j <= HEIGHTS; j++) fillRow(row++, side * alpha, FLOOR + ((CEILING - FLOOR) * j) / HEIGHTS, facing, 0.52 + (0.46 * j) / HEIGHTS)
     }
     position.needsUpdate = normal.needsUpdate = uv.needsUpdate = true
     geometry.computeBoundingSphere()
