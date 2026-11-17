@@ -193,7 +193,7 @@ export function createScene(container: HTMLElement) {
       else rig.setLimits([d * 0.5, d * 2], Math.PI / 2)
       done?.()
     }
-    if (shot.dir && (shot.p === 0 || shot.p === 1)) {
+    if ((shot.dir > 0 && shot.p === 1) || (shot.dir < 0 && shot.p === 0)) {
       if (shot.p === 0 && shot.next) Object.assign(shot, { current: shot.next, next: undefined, start: rig.pose(), dir: 1 })
       else {
         if (shot.p === 0) shot.current = null

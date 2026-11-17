@@ -28,6 +28,9 @@ export function StepCard({ steps, step, stop, waiting, ref }: Props) {
       ))}
       <nav className="steps">
         {step > 0 ? <a href={href(step - 1)}>Back</a> : <span />}
+        <a className="home" href="#/">
+          Whole tree
+        </a>
         {step < steps.length - 1 && <a href={href(step + 1)}>Next</a>}
       </nav>
     </article>
