@@ -12,8 +12,7 @@ import {
   Vector3,
 } from 'three'
 import { mulberry32 } from '../../scene/tree'
-import type { Site } from '../types'
-import { rootFrame } from './frame'
+import { rootFrame, type Site } from './frame'
 
 const UP = new Vector3(0, 1, 0)
 

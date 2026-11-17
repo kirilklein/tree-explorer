@@ -1,4 +1,11 @@
-import { Quaternion, Vector3 } from 'three'
+import { type Mesh, Quaternion, Vector3 } from 'three'
+
+export interface Site {
+  tip: Vector3
+  direction: Vector3
+  radius: number
+  stone: Mesh
+}
 
 const UP = new Vector3(0, 1, 0)
 

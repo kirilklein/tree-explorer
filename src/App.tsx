@@ -39,7 +39,7 @@ export default function App() {
     if (!scene || !viewId) return
     let live = true
     VIEWS[viewId]().then(({ default: next }) => {
-      if (live) setActive({ view: next, instance: scene.showView(next)! })
+      if (live) setActive({ view: next, instance: scene.showView(next, STOPS.find((s) => s.view === viewId) ?? null)! })
     })
     return () => {
       live = false
@@ -69,7 +69,7 @@ export default function App() {
   const pins = useMemo<Pin[]>(() => {
     if (instance) return settled ? (instance.labels ?? []).filter((label) => !label.steps || label.steps.includes(step)) : []
     if (!scene || route.view || !settled) return []
-    return STOPS.map((s) => ({ text: s.label, at: s.anchor ?? scene.rootLabel, href: `#/${s.id}`, active: s === stop }))
+    return STOPS.map((s) => ({ text: s.label, at: s.anchor, href: `#/${s.id}`, active: s === stop }))
   }, [scene, instance, step, route.view, stop, settled])
 
   return (

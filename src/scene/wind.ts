@@ -1,9 +1,11 @@
 import { type Material, type Mesh, MeshDepthMaterial, RGBADepthPacking } from 'three'
 
 export const windTime = { value: 0 }
+export const windAmount = { value: 1 }
 
 const header = /* glsl */ `
 uniform float uTime;
+uniform float uWind;
 attribute float aSway;
 #ifdef WIND_FLUTTER
 attribute float aPhase;
@@ -17,7 +19,7 @@ vec3 windOffset(vec3 p, float sway) {
   float bend = h * h * 0.0011 * gust * (0.7 + 0.3 * sin(uTime * 0.8));
   float local = sway * 0.012 * gust;
   float phase = dot(p, vec3(0.21, 0.13, 0.17));
-  return vec3(1.0, 0.0, 0.35) * bend + local * vec3(
+  return uWind * vec3(1.0, 0.0, 0.35) * bend + uWind * local * vec3(
     sin(uTime * 1.7 + phase),
     0.4 * sin(uTime * 2.3 + phase * 1.3),
     0.7 * sin(uTime * 1.3 + phase * 0.8)
@@ -29,7 +31,7 @@ const project = /* glsl */ `
 vec4 mvPosition = vec4(transformed, 1.0);
 #ifdef USE_INSTANCING
   #ifdef WIND_FLUTTER
-    mvPosition.z += sin(uTime * 5.0 + aPhase) * 0.12 * transformed.y * windGust();
+    mvPosition.z += uWind * sin(uTime * 5.0 + aPhase) * 0.12 * transformed.y * windGust();
   #endif
   mvPosition = instanceMatrix * mvPosition;
   mvPosition.xyz += windOffset((instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz, aSway);
@@ -44,6 +46,7 @@ function patch(material: Material, flutter: boolean) {
   if (flutter) material.defines = { ...material.defines, WIND_FLUTTER: '' }
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = windTime
+    shader.uniforms.uWind = windAmount
     shader.vertexShader = header + shader.vertexShader.replace('#include <project_vertex>', project)
   }
   material.customProgramCacheKey = () => `wind-${flutter}`
