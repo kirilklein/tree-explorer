@@ -3,7 +3,7 @@ import type { Pose } from '../../scene/camera'
 import type { View } from '../types'
 import { createBlade } from './blade'
 import { createCell } from './cell'
-import { NOTCH } from './frame'
+import { NOTCH, THICKNESS } from './frame'
 import { free, smooth } from './paint'
 import { leafPlan } from './poses'
 import { createStreams } from './streams'
@@ -63,7 +63,7 @@ const view: View = {
     const notch = [new Plane(new Vector3(1, 0, 0), -NOTCH.half), new Plane(new Vector3(-1, 0, 0), -NOTCH.half), new Plane(new Vector3(0, 0, -1))]
     const cut = notch.map(() => new Plane())
 
-    const blade = createBlade(world.leaves, leaf.index, cut)
+    const blade = createBlade(world.leaves, leaf.index, cut, THICKNESS / 2 / leaf.scale)
     const tissue = createTissue()
     const cell = createCell(plan)
     const streams = createStreams(plan)
