@@ -4,9 +4,11 @@ import type { View } from '../types'
 import { createBlock } from './block'
 import { createCut, cutPlanes } from './cut'
 import { FLOOR, HALF_ANGLE, surfaceOf, trunkFrame } from './frame'
+import { LOOP } from './growth'
 import { layersOf } from './layers'
 import { sectionPoses } from './poses'
 import { ringTextures } from './texture'
+import { createTubes } from './tubes'
 
 const view: View = {
   steps: [
@@ -35,6 +37,22 @@ const view: View = {
         'Over time, the phloem becomes part of the bark.',
       ],
     },
+    {
+      title: 'Water on its way up',
+      text: [
+        'These water-carrying cells are tracheids. Their thick walls contain lignin, a key part of wood.',
+        'Water moves from one tracheid to the next through pits in the side walls.',
+        'Water evaporates from the leaves, and this pulls the water up from the roots.',
+      ],
+    },
+    {
+      title: 'Sugar on its way down',
+      text: [
+        'In the phloem, sieve-tube cells sit end to end and form a long sieve tube.',
+        'Sugars flow from one cell to the next through the holes in the sieve plates. Pressure pushes the sugar and water down toward the roots.',
+        'The sieve-tube cells are alive, but they have lost their nucleus. The companion cells next to them give them energy.',
+      ],
+    },
   ],
   create(world) {
     const frame = trunkFrame(world.sites.trunk)
@@ -53,7 +71,8 @@ const view: View = {
       }),
     )
     const block = createBlock(frame, surface, radius)
-    const group = new Group().add(faces, ...block.meshes)
+    const tubes = createTubes(frame, radius)
+    const group = new Group().add(faces, ...block.meshes, tubes.group)
 
     const wood = world.wood.material as MeshStandardMaterial
     const before = { planes: wood.clippingPlanes, intersection: wood.clipIntersection }
@@ -85,6 +104,13 @@ const view: View = {
         { text: 'Dead water-carrying cell', at: block.point(-5, 6).toArray(), steps: [1] },
         { text: 'New wood', at: block.point(-2, 6).toArray(), steps: [2] },
         { text: 'New phloem', at: block.point(2, 6).toArray(), steps: [2] },
+        { text: 'Tracheid', at: tubes.points.tracheid.toArray(), steps: [3] },
+        { text: 'Pit', at: tubes.points.pit.toArray(), steps: [3] },
+        { text: 'Water', at: tubes.points.water.toArray(), steps: [3] },
+        { text: 'Sieve-tube cell', at: tubes.points.sieve.toArray(), steps: [4] },
+        { text: 'Sieve plate', at: tubes.points.plate.toArray(), steps: [4] },
+        { text: 'Companion cell', at: tubes.points.companion.toArray(), steps: [4] },
+        { text: 'Sugar', at: tubes.points.sugar.toArray(), steps: [4] },
       ],
       update(dt, step, camera) {
         const next = MathUtils.smoothstep(2.15 - camera.position.distanceTo(world.sites.trunk.point), 0, 0.45)
@@ -96,8 +122,11 @@ const view: View = {
         }
         pulse += dt
         if (step === 2) growth += dt
+        else if (step > 2) growth = Math.min(Math.ceil(growth / LOOP - 1e-9) * LOOP, growth + dt * 3)
+        const settled = growth % LOOP === 0
         const near = 1 - MathUtils.smoothstep(camera.position.distanceTo(block.center), 0.4, 0.75)
         block.update(growth, pulse, near * open)
+        tubes.update(dt, [settled && step >= 3, settled && step >= 4], near * open)
       },
       dispose() {
         wood.clippingPlanes = before.planes
