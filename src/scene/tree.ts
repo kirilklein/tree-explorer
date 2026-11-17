@@ -23,6 +23,13 @@ export interface Tree {
   leaves: Leaf[]
 }
 
+export interface FeaturedRoot {
+  stem: Vector3[]
+  fork: Vector3
+  branch: Vector3[]
+  segments: Segment[]
+}
+
 export const MAX_LEAVES = 3000
 export const SOIL_HALF_SIZE = 7
 export const SOIL_DEPTH = 3.6
@@ -34,7 +41,7 @@ const TROPISM = [0.04, 0.03, 0.05, 0.02, -0.05]
 const CHILDREN = [5, 3, 3, 3, 0]
 const UP = new Vector3(0, 1, 0)
 
-function mulberry32(seed: number) {
+export function mulberry32(seed: number) {
   let a = seed >>> 0
   return () => {
     a = (a + 0x6d2b79f5) >>> 0
@@ -172,4 +179,39 @@ export function generateTree(seed = 7): Tree {
   })
 
   return { branches, roots, leaves }
+}
+
+export function chains(segments: Segment[]): Segment[][] {
+  const result: Segment[][] = []
+  for (const seg of segments) {
+    const last = result.at(-1)?.at(-1)
+    if (last && last.end === seg.start && last.depth === seg.depth) result.at(-1)!.push(seg)
+    else result.push([seg])
+  }
+  return result
+}
+
+const pointsOf = (chain: Segment[]) => [chain[0].start, ...chain.map((s) => s.end)]
+
+export function featuredRoot(roots: Segment[]): FeaturedRoot {
+  const all = chains(roots)
+  let best: (FeaturedRoot & { burial: number }) | null = null
+  for (const main of all.filter((c) => c[0].depth === 0)) {
+    const start = main[0].start
+    if (start.z <= 0 || -start.x > main[0].startRadius) continue
+    main.slice(0, -1).forEach((seg, i) => {
+      const child = all.find((c) => c[0].start === seg.end)
+      const burial = -seg.end.x
+      if (!child || seg.end.z <= 0 || burial < seg.endRadius || (best && best.burial <= burial)) return
+      const segments = [...main.slice(0, i + 1), ...child]
+      best = { stem: pointsOf(main.slice(0, i + 1)), fork: seg.end, branch: pointsOf(child), segments, burial }
+    })
+  }
+  const { stem, fork, branch, segments } = best!
+  return { stem, fork, branch, segments }
+}
+
+export function rootTip({ segments }: FeaturedRoot) {
+  const last = segments.at(-1)!
+  return { tip: last.end, direction: last.end.clone().sub(last.start).normalize(), radius: last.endRadius }
 }

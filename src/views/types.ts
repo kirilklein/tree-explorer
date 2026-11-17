@@ -1,4 +1,4 @@
-import type { Object3D } from 'three'
+import type { Camera, Mesh, Object3D, Vector3 } from 'three'
 import type { Pose, Vec3 } from '../scene/camera'
 
 /*
@@ -10,7 +10,16 @@ import type { Pose, Vec3 } from '../scene/camera'
  * calls `dispose`, which must free every geometry, material and texture the view made.
  * The scene keeps the tree's fog (starts 38 units away), so keep the view within ~30 units
  * of the origin and keep each pose's camera distance inside `distance`.
+ * An anchored view is built inside the tree's own space instead: the shell keeps the tree and
+ * soil visible, passes the view its site, and zooms by ratio between the poses.
  */
+
+export interface Site {
+  tip: Vector3
+  direction: Vector3
+  radius: number
+  stone: Mesh
+}
 
 export interface Step {
   title: string
@@ -34,11 +43,12 @@ export interface ViewInstance {
   background?: string
   /** Orbit zoom limits [min, max]; [1, 20] when omitted. */
   distance?: [number, number]
-  update(dt: number, step: number): void
+  update(dt: number, step: number, camera: Camera): void
   dispose(): void
 }
 
 export interface View {
   steps: Step[]
-  create(): ViewInstance
+  anchored?: boolean
+  create(site: Site): ViewInstance
 }

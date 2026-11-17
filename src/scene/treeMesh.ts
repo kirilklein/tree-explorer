@@ -10,20 +10,10 @@ import {
   MeshStandardMaterial,
   Vector3,
 } from 'three'
-import type { Segment, Tree } from './tree'
+import { chains, type Segment, type Tree } from './tree'
 import { addWind } from './wind'
 
 const RADIAL = 10
-
-function chains(segments: Segment[]): Segment[][] {
-  const result: Segment[][] = []
-  for (const seg of segments) {
-    const last = result.at(-1)?.at(-1)
-    if (last && last.end === seg.start && last.depth === seg.depth) result.at(-1)!.push(seg)
-    else result.push([seg])
-  }
-  return result
-}
 
 function woodGeometry(segments: Segment[]): BufferGeometry {
   const positions: number[] = []
@@ -119,11 +109,18 @@ function leafGeometry(): BufferGeometry {
   return geometry
 }
 
-export function createTreeMeshes(tree: Tree) {
+export function createTreeMeshes(tree: Tree, featured: Set<Segment>) {
   const wood = new Mesh(woodGeometry(tree.branches), new MeshStandardMaterial({ color: '#7b5b45', roughness: 0.9 }))
   addWind(wood, false)
 
-  const roots = new Mesh(woodGeometry(tree.roots), new MeshStandardMaterial({ color: '#9a7656', roughness: 0.95 }))
+  const roots = new Mesh(
+    woodGeometry(tree.roots.filter((s) => !featured.has(s))),
+    new MeshStandardMaterial({ color: '#9a7656', roughness: 0.95 }),
+  )
+  const featuredRoot = new Mesh(
+    woodGeometry(tree.roots.filter((s) => featured.has(s))),
+    new MeshStandardMaterial({ color: '#b3835a', roughness: 0.95 }),
+  )
 
   const geometry = leafGeometry()
   const count = tree.leaves.length
@@ -147,10 +144,10 @@ export function createTreeMeshes(tree: Tree) {
   })
   addWind(leaves, true)
 
-  for (const mesh of [wood, roots, leaves]) {
+  for (const mesh of [wood, roots, featuredRoot, leaves]) {
     mesh.castShadow = true
     mesh.receiveShadow = true
   }
   leaves.receiveShadow = false
-  return { wood, roots, leaves }
+  return { wood, roots, featuredRoot, leaves }
 }
