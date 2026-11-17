@@ -1,105 +1,109 @@
 # Handoff
 
-> Generated: 2026-11-13
+> Generated: 2026-11-17 (replaces the 2026-11-13 version)
 > Project: Tree Explorer, `/Users/kirilklein/kiril/personal_code/learning/tree-explorer`
-> Session summary: Built stage 1 (windy 3D tree, live), a view frame (PR #1), then changed direction to seamless continuous camera shots; the Roots pilot shot was being built when this was written.
+> Session summary: The seamless Roots shot and descent are done and approved; leaves, trunk and transport were half-built by three parallel builders when the Mac had to restart. All work is saved in local WIP commits.
 
 ## Goal
 
-An interactive 3D tree in the browser that teaches tree biology by zooming. The learner starts at the whole tree, then moves into leaves, trunk and roots, then into tissues and single cells, with animated processes (water transport, cambium growth, fungi dissolving rock, a leaf cell that comes apart). **Every move must be a seamless zoom through the same tree, never a jump between scenes.** Kiril said this explicitly after seeing the view frame.
+An interactive 3D tree in the browser that teaches tree biology by zooming. The learner starts at the whole tree and moves into leaves, trunk and roots, then into tissues and single cells, with animated processes. **Every move is one continuous camera shot through the same tree. Nothing is swapped out.** Kiril on the Roots descent: "this is exactly how i imagined it, perfect!!" That descent (`src/views/rock/`) is the reference for everything else.
 
-Repo: public `kirilklein/tree-explorer`, live at https://kirilklein.github.io/tree-explorer/ (GitHub Pages, deployed by `.github/workflows/deploy.yml` on push to `main`).
+Repo: public `kirilklein/tree-explorer`, live at https://kirilklein.github.io/tree-explorer/ (Pages, deployed on push to `main`).
 
 ## Current State
 
-**Working:**
-- Stage 1 on `main` (`b7c6b17`), live. Procedural tree with GPU wind, soil block with a quarter cut away, three stops (Leaves, Trunk, Roots) with camera fly-in and text card, hash routing.
-- View frame on `feat/view-frame` (`067a52a`), open as PR #1, not merged. Adds a view contract (`src/views/types.ts`), lazy registry, routes like `#/trunk/inside/2`, a step card, a "Follow the water" button, four stub views. Lint, 6 tests and build passed.
+**Done**
+- `main` (live): stage 1 tree plus the view frame (PR #1, squash-merged).
+- Roots shot + descent: reviewed, approved by Kiril. On `feat/view-frame` as PR #3 → `main`, mergeable, **waiting for Kiril's squash-merge**. (PR #2 was merged into `feat/view-frame`, not `main`; #3 fixes that.)
+- Preparation: commit `71254db` on `feat/view-world`, pushed, no PR yet. One shot for all stops, per-stop site files, views get a `world`, all four views anchored. Lint, 68 tests, build passed.
 
-**In progress when this was written:**
-- Roots pilot shot: an Opus subagent was building in worktree `learning/tree-explorer-shot`, branch `feat/roots-shot` (from `feat/view-frame`). **Its result was not seen.** It was told to commit once ("Make overview to roots one continuous shot") and not push. Check `git -C /Users/kirilklein/kiril/personal_code/learning/tree-explorer-shot log --oneline -3` and `status`. If there is no commit, the work is partial or missing: re-run it from the plan.
+**Half-built (local WIP commits, not pushed, unverified by eye)**
 
-**Known wrong (by Kiril's standard):**
-- "Go inside" in PR #1 swaps scenes in one frame. That is the jump he rejected. It stays until the Roots shot pattern is proven.
+| View | Worktree | Branch | WIP commit |
+|---|---|---|---|
+| Leaves descent | `learning/tree-explorer-leaf` | `feat/descent-leaf` | `1cba20b` |
+| Trunk descent | `learning/tree-explorer-trunk` | `feat/descent-trunk` | `64b00ad` |
+| Transport view | `learning/tree-explorer-transport` | `feat/transport` | `dc41213` |
 
-**On hold:**
-- Four view builders (trunk cross-section, water transport, roots and rock, leaf cell). None committed code. Research is done; see below.
+All three branch from `71254db`. Each WIP commit must be finished and then replaced by one clean commit (`git reset --soft 71254db` then commit, or amend).
 
-## Files in Play
-
-All paths under `/Users/kirilklein/kiril/personal_code/learning/`.
-
-| File | Why It Matters |
-|------|---------------|
-| `/Users/kirilklein/.claude/plans/lets-build-a-3d-concurrent-sifakis.md` | The approved plan for the Roots shot. Read first. |
-| `tree-explorer/` | Main checkout, branch `main`. Do not commit or push `main` from Claude: `guard.sh` blocks it. |
-| `tree-explorer-frame/` | Worktree, `feat/view-frame`, PR #1. |
-| `tree-explorer-shot/` | Worktree, `feat/roots-shot`. The Roots pilot. |
-| `tree-explorer-{section,water,rock,cell}/` | Worktrees, `feat/view-<name>`, all at `067a52a`. `section` has four uncommitted, untested draft files in `src/views/section/` (`growth.ts`, `growth.test.ts`, `log.ts`, `cells.ts`). |
-| `src/scene/tree.ts` | Seeded generator: branches, roots, leaves. The shot needs a pure function here that picks the featured root and its fork. |
-| `src/scene/ground.ts` | Soil as a fixed extruded L shape with stones in the cut faces. The shot replaces it with two resizable boxes per layer so a wall can retreat. |
-| `src/scene/camera.ts` | OrbitControls rig, straight-line `flyTo`, card inset offset. |
-| `src/scene/createScene.ts` | Renderer, lights, loop, `showView` (frame branch). |
-| `src/scene/wind.ts` | Wind as an `onBeforeCompile` vertex patch. |
-| `src/data/stops.ts`, `src/App.tsx`, `src/route.ts` | Stops, shell, hash routes. |
-| `/private/tmp/claude-501/-Users-kirilklein-kiril-personal-code/4f40b665-ca1b-413c-9ee8-f74060440f35/scratchpad/` | Capture scripts (`shoot.mjs`, `frame-shoot.mjs`), screenshots, and (if the builder finished) `shot-recordings/` with mp4s and contact sheets. Under `/private/tmp`: gone after a reboot. |
-| `/Users/kirilklein/.claude/plans/lets-build-a-3d-concurrent-sifakis-agent-*.md` | Three view builders' own plans (water, rock, cell) with draft card text and source quotes. |
-
-## What Has Been Tried (and Why It Failed)
-
-### Attempt 1: Scene-swap view frame (PR #1)
-- **What:** a deep view replaces the tree; the tree is hidden in one frame and the camera flies to the view's first pose.
-- **Why it failed:** nothing connects tree and view. Kiril: "my idea was making seamless transitions, with zoomins ... rather than a jump from one thing to the other."
-
-### Attempt 2: Zoom-dissolve plan (never built)
-- **What:** push the camera into a spot on the tree and crossfade to the view rendered by a second camera.
-- **Why rejected:** still two pictures blended. Kiril replaced it with his own brief: one continuous shot through the *same* geometry, so the learner can point at a root and follow that exact root underground.
-
-### Attempt 3: Four view builders in parallel on the scene-swap contract
-- **What:** four Opus subagents, one per view, each in its own worktree.
-- **Why stopped:** the views must be anchored to a real spot on the tree, not shown in its place. Building them on the old contract would be rework.
-
-### Small traps hit
-- `guard.sh` blocks any push or commit on `main` from Claude, including `!` commands in the session. Kiril pushed `main` from a plain terminal.
-- Headless Chrome `--screenshot --virtual-time-budget` renders only about 3 frames under SwiftShader. Use the DevTools-protocol scripts in the scratchpad.
-- three r187 removed `PCFSoftShadowMap`; use `PCFShadowMap`.
-- `open.lib.umn.edu` returns 403 to curl and is not on the WebFetch allowlist.
-
-## Current Best Theory
-
-Kiril's brief is the design. One canvas, one scene. One timeline value drives camera position, look target and soil cutaway together, and runs backward for Back. The shot starts from the learner's current camera pose, aims at a fork of one real root, descends beside the trunk, the soil wall retreats along that root, and the camera glides along it and settles; labels and card appear only when it is nearly still. Prove it on Overview → Roots → Overview, tuned against recordings, **before** applying it to Trunk and Leaves.
-
-For scale jumps of 100x and more (root tip to fungal thread, trunk to cells) the same rule applies: a detail mesh aligned to the same spot and blended in as the camera approaches. Not designed yet.
+**Nothing is running after the restart.** Dev servers (5180 main, 5181 frame, 5186 view-world) and all builders are gone. The builders' context is lost; their status reports are condensed below.
 
 ## Next Steps
 
-1. Read the plan file, then check the Roots shot worktree for a commit (see Current State).
-2. If committed: run lint, test, build there; read the contact sheets in `scratchpad/shot-recordings/` (or re-record if the scratchpad is gone); check the four beats of the brief, both directions, default and off-axis start.
-3. Give Kiril the half-speed recordings (or a dev preview: `npm run dev -- --port 5186 --strictPort` in the shot worktree). **He must watch the motion; stills cannot sign it off.**
-4. Tune until he agrees. Then push `feat/roots-shot` and open PR #2 with base `feat/view-frame`.
-5. Apply the pattern to Trunk and Leaves (own short plan first).
-6. Re-brief the four views as detail anchored to the tree, then resume them in parallel. Use the research below.
+1. Check PR #3. If merged: rebase `feat/view-world` onto `origin/main` (`git rebase --onto origin/main f804931 feat/view-world`), push with `--force-with-lease`, open its PR against `main`.
+2. Finish the three views, one Opus builder each (Kiril allowed Opus builders and parallel work). Give each builder: this file's section for its view, the "how to write an anchored view" text in `src/views/types.ts` header, and the scripts folder. Each ends with lint, full `npm test`, build, recordings, one commit.
+3. Review each: contact sheets, single frames at each handover, sentence → quote tables, tree restored on leaving.
+4. Merge the three into one local branch, run a preview, let Kiril watch. He must see motion himself; stills cannot sign it off.
+5. PRs against `main`, one at a time, each rebased after the one before is merged.
 
-## Research already done for the views (keep)
+## Per-view status (from the builders' hand-backs)
 
-- **Water** (OpenStax Biology 2e 30.5, Cal Academy transcript): do not say "the tree has no pump"; the Cal Academy transcript says "The tree acts like a giant water pump." Say it costs the tree no metabolic energy. Redwoods "nearing 116 meters" (OpenStax). No "10 metre" limit in any opened source.
-- **Rock** (PMC4510491, Schmalenberger et al. 2015): Scots pine seedlings with *Paxillus involutus* in lab microcosms. Hyphae secreted oxalate; calcium oxalate crystals built up on hyphae; more on gabbro, basalt, olivine, limestone than on quartz and granite. **No pits were imaged and return transport to the tree was not measured.** Show crystals; mark any pit as illustration. General points from OpenStax 30.3 and 31.3.
-- **Trunk** (Oregon State `pnw184.pdf`, OpenStax 30.1 and 30.2): layers and rings from Oregon State; living phloem, water-conducting xylem "dead at maturity", living xylem parenchyma, cambium forming xylem inside and phloem outside from OpenStax. **Unsupported so far:** outer bark is dead, "ray cells", cambium is "thin".
-- **Cell** (OpenStax 4.3, 8.1, 31.1): carbon from atmospheric CO2 "composes the majority of the dry mass within most plants" (31.1). "Palisade" and cytoplasmic streaming are unsupported without the Minnesota page.
-- The Veritasium and GFZ videos shape the story only; no claim may be attributed to them.
+### Trunk (`src/views/section/`) — closest to done
+- **Works in stills:** step 1 (rings, five layers, bright cambium line, cut flush with the bark), steps 2–3 (green glowing living cells, pale rims around dark holes for dead cells). 15 tests in the folder passed; full suite not re-run.
+- **How the wedge is cut:** `wood.material.clippingPlanes` = 5 planes with `clipIntersection` (bottom, top, two radial planes at ±0.7 rad, outer bound). The hole is filled by `cut.ts` geometry built from a ray-cast against the real trunk triangles (`surfaceOf` in `frame.ts`), because the trunk is a decagon and a circle would stick out about 5%. Safe because no other wood comes below y=2.06 and the cut spans about 0.77–1.13; a test asserts it. The wedge opens with camera distance (closed at ≥2.15, open at ≤1.70), so nothing pops.
+- **Kiril's hard checks:** the cut stays inside the trunk's outline; rings visible in step 1. Both reported as holding; verify by eye.
+- **To do:** (1) step-1 labels overlap at 400px; fix computed, not applied: anchor Outer bark, Phloem, Cambium on the left wall (`frame.point(-HALF_ANGLE, mid(layer), h)` at h = 0.13 / 0.04 / −0.05), Sapwood at (0.15, sapwood middle, FLOOR), Heartwood at (0.3, 0.18, FLOOR). (2) Delete `scratch.test.ts`. (3) Orbit stills came out wrong (empty sky); use smaller drags, one capture at a time. (4) Overview still with the cut open. (5) Recordings in and out.
+- **Deviations:** cells sit on the horizontal cross-section, not a radial wall (water-carrying cells run up the trunk, so only a cross-section shows them as rims around holes). Total zoom about 14x, not 100x+.
+- **Card changes:** dropped "Under it," before the phloem sentence (no source places it); step 3 line 3 is "Over time, the phloem becomes part of the bark."
+
+### Transport (`src/views/water/`)
+- **Works in stills:** all five steps render. Step 3 (eight files of beads in lockstep with link threads) reads well. 25 tests in the folder passed before two small edits.
+- **How:** `paths.ts` builds root-tip → trunk → twig paths from the generator's `chains()`; arc length `s` is shared in the trunk so files line up. Particles are InstancedMeshes patched with the shell's own `addWind` and a per-instance `aSway`, so they move with the branches; wind is also calmed to 0.15. `glass.ts` makes wood 0.28, roots 0.35, leaves 0.42 opacity and restores them.
+- **Contract gap:** `update` gets no "leaving" signal. The view reads `location.hash.startsWith('#/water')` to fade out during the fly-back. Works; consider a proper signal in the shell later.
+- **To do:** look at the new side-on crown pose for step 2 (earlier it was cluttered and vapour looked like hail); recordings in and out (never completed); phone stills; overview-after still; full test, build, lint.
+- **Oddity:** its dev log showed HMR updates for `src/App.tsx` it did not make. Cause unknown.
+
+### Leaves (`src/views/cell/`) — least verified
+- **Built, never seen on screen:** blade with veins on the real leaf, notch with tissue section, featured palisade cell with exploded view, chloroplast with five streams, 14 labels. `sway.ts` copies the leaf wind shader on the CPU so detail stays on the leaf. 12 tests in the folder pass; `tsc` and lint clean.
+- **Problem 1, render cost:** headless Chrome takes about 2 s per frame with the view shown. Likely cause: about 800k triangles in the tissue (2,500 chloroplast bumps, 400 epidermis spheres, 250 palisade capsules, 190 spongy cells). Cut segments or counts first. Not confirmed.
+- **Problem 2:** the one frame seen of `#/leaves/inside/3` showed crown leaves, not the cell. Too early, or a pose bug. Not diagnosed.
+- **To do:** fix cost, get stills of every step, tune labels and card fit at 400px (step 3 card is long), check transparency order, record, full test and build.
+- Sizes: cell unit C = 0.0003; pose distances 1 → 0.012 → 0.00375 → 0.000255 (about 8,600x from the stop arrival at 2.2).
+
+## Facts on the cards (rule: every sentence maps to a quoted passage in a source that was opened)
+
+- **Roots:** OpenStax Biology 2e 30.3, 31.3; Schmalenberger et al. 2015 (PMC4510491) for the oxalate step, worded as one lab study. No pit in the stone.
+- **Trunk:** Oregon State PNW 184, OpenStax 30.1, 30.2. Not supported, keep off cards: outer bark is dead, "ray cells", a "thin" cambium, "hollow tubes".
+- **Leaves:** OpenStax 30.4, 4.3, 8.1, 31.1. Label reads "Plasma membrane" (4.3 never says "cell membrane"). No cytoplasmic streaming.
+- **Transport:** OpenStax 30.5 only. Never "the tree has no pump" (the Cal Academy transcript says it acts like one). No "10 metre" limit, no pressure figure. The phloem's position "just under the bark" is shown, not stated.
+- Full sentence → quote tables and saved source text are in the scratch folder (`*-src/`). Videos are never a source.
+
+## Files in Play
+
+| Path (under `/Users/kirilklein/kiril/personal_code/learning/`) | Why |
+|---|---|
+| `tree-explorer/` | Main checkout, `main`. Claude cannot commit or push here (`guard.sh`). |
+| `tree-explorer-frame/` | `feat/view-frame`, PR #3. |
+| `tree-explorer-shot/` | `feat/view-world` at `71254db`. The shared shell. |
+| `tree-explorer-{leaf,trunk,transport}/` | The three WIP views. |
+| `tree-explorer-handoff/` | This file, branch `docs/handoff`. Not for `main`. |
+| `tree-explorer-scratch/` | **Not a repo.** Saved from the session scratchpad before the restart: all capture scripts (`*-record.mjs`, `*-assemble.sh`, `*-run.sh`), videos and contact sheets of the roots shot, descent and preparation, partial stills of the three views, source text dumps. Scripts still contain the old `/private/tmp/...scratchpad` paths; fix them before use. |
+| `src/views/types.ts` | The view contract; its header is the builder guide. |
+| `src/views/rock/` | Reference implementation. |
+| `src/scene/shot.ts`, `camera.ts`, `createScene.ts`, `sites/` | Shot timeline, ratio zoom, shell, per-stop sites. |
+| `/Users/kirilklein/.claude/plans/lets-build-a-3d-concurrent-sifakis.md` | The last approved plan (leaves, trunk, transport). |
+
+## What Has Been Tried (and Why It Failed)
+
+- **Scene-swap views (PR #1's "Go inside").** Kiril rejected the jump. Replaced by anchored views.
+- **Zoom-dissolve between two pictures.** Rejected before building; he wanted the same geometry.
+- **Stacked PRs.** Kiril squash-merges. PR #2 stacked on #1's branch never reached `main` and the follow-up conflicted. Fixed with `git merge -s ours origin/main` after checking both trees. Now: one PR at a time against `main`.
+- **Old trunk placeholder** (a cylinder wider than the trunk). Kiril: "this thing just becomes bigger than the trunk itself ... doesn't show any detail like the rings". Hence the two hard checks.
+- **My mistake:** I force-removed the old worktrees `tree-explorer-{section,water,rock,cell}` and lost four uncommitted draft files. Look inside a worktree before removing it.
+- **Parallel recording.** Three builders recording at once made headless Chrome so slow that direct-link stills fired before the view loaded. Record one at a time.
 
 ## Key Constraints
 
-- Kiril's global `CLAUDE.md`: a plan he agrees to before architectural code; replies short; no subagents unless he asks (he allowed Opus 5.5 builders for implementation here); comments only when really necessary; no co-author lines in commits; deliver only what was asked.
-- Every card sentence must be backed by a passage from a written source that was actually opened.
-- Git: personal identity (`kirilklein`, `49436907+kirilklein@users.noreply.github.com`), remote `git@github-personal:kirilklein/tree-explorer.git`. For `gh` writes: `gh auth switch --user kirilklein` in the same call, then switch back to `kvk-cmd`.
-- Feature branches only; Kiril merges and pushes `main`.
-- Stack: Vite, TypeScript, React 19, plain three.js (no react-three-fiber), vitest, oxlint. No new dependencies.
-- Dev servers may still run on ports 5180 (`main`) and 5181 (frame). Stop them if not needed.
-- Open question for Kiril: University of Minnesota source (paste text, allow host, or drop).
-- This file lives only on branch `docs/handoff` (worktree `learning/tree-explorer-handoff`). Do not merge it into `main`.
+- Kiril's global `CLAUDE.md`: a plan he agrees to before architectural code; short replies with a path line and a "Needs you" block; subagents only when he asks (he allowed Opus builders here); comments only when really necessary; no co-author lines; deliver only what was asked.
+- Feature branches only. Kiril merges, with squash. Local commits and PRs are allowed ("You can also open prs once done").
+- Git identity: `kirilklein`, remote `git@github-personal:kirilklein/tree-explorer.git`. For `gh` writes: `gh auth switch --user kirilklein` in the same call, then back to `kvk-cmd`.
+- Stack: Vite, TypeScript, React 19, plain three.js, vitest, oxlint. No new dependencies.
+- Headless capture: DevTools protocol with a stepped virtual clock, 60 frames per second of shot time, ffmpeg at `/opt/homebrew/bin/ffmpeg`. Software rendering is slow.
+- `open.lib.umn.edu` was added to the managed WebFetch allowlist by Kiril; it takes effect after a Claude Code restart. The site may still answer 403. No card needs it.
 
 ## Memory Pointers
 
-- Work state list `tree-explorer` (`work_state_read`) holds the same status in short.
-- Searches worth re-running: `tree explorer roots shot`, `tree explorer view frame`.
+- Work state list `tree-explorer` (`work_state_read`).
+- Memory file `squash-merges-no-stacked-prs`.
+- Searches: `tree explorer roots descent`, `tree explorer view world`.
