@@ -157,7 +157,7 @@ export function createTubes(frame: Frame, radius: number) {
   const opening = flat('#7a5a38')
   PITS.forEach((h, i) => {
     const hole = new Mesh(new PlaneGeometry(0.4 * C, 2 * PIT_HALF * C), opening)
-    hole.position.set((xOf(TRACHEIDS[i].row) + xOf(TRACHEIDS[i + 1].row)) / 2, h * C, woodZ - 0.03 * C)
+    hole.position.set((xOf(TRACHEIDS[i].row) + xOf(TRACHEIDS[i + 1].row)) / 2, h * C, woodZ - 0.34 * C)
     water.add(hole)
   })
   const marks = new InstancedMesh(new CircleGeometry(0.07 * C, 12), flat('#a5855a'), 18)
