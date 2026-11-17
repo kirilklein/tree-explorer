@@ -7,6 +7,8 @@ import {
   Group,
   InstancedMesh,
   LatheGeometry,
+  LineBasicMaterial,
+  LineSegments,
   MathUtils,
   Matrix4,
   Mesh,
@@ -43,6 +45,8 @@ const PIT_HALF = 0.32
 const PLATE_THICKNESS = 0.12
 const BEAD_Z = -0.16
 const RISE_SECONDS = 1.4
+const LANES = 5
+const PER_LANE = 46
 
 interface Span {
   bottom: number
@@ -180,6 +184,17 @@ export function createTubes(frame: Frame, radius: number) {
   const drops = new InstancedMesh(new SphereGeometry(0.1 * C, 12, 8), solid('#4fa8ea', '#2f7fd0', 0.5), 36)
   water.add(drops)
 
+  const stream = run([[xA, PITS[0] - 1.8], [xA, PITS[0]], [xB, PITS[0]], [xB, PITS[0] + 1.8]])
+  const oxygen = new InstancedMesh(new SphereGeometry(0.024 * C, 10, 8), solid('#4fa8ea', '#2f7fd0', 0.5), LANES * PER_LANE)
+  const hydrogen = new InstancedMesh(new SphereGeometry(0.014 * C, 8, 6), solid('#ffffff'), 2 * oxygen.count)
+  const bondAt = new BufferAttribute(new Float32Array(oxygen.count * 6), 3)
+  const bonds = new LineSegments(
+    new BufferGeometry().setAttribute('position', bondAt),
+    new LineBasicMaterial({ color: '#cfeaff', transparent: true, clippingPlanes: clip.clippingPlanes }),
+  )
+  bonds.frustumCulled = false
+  water.add(oxygen, hydrogen, bonds)
+
   const sugar = new Group()
   const phloemZ = PHLOEM_X * C
   const xS = xOf(SIEVE_ROW)
@@ -228,16 +243,29 @@ export function createTubes(frame: Frame, radius: number) {
   const offsets = Array.from({ length: drops.count }, (_, i) => new Vector3(Math.sin(i * 2.4) * 0.1, Math.cos(i * 1.7) * 0.1, Math.sin(i * 0.9) * 0.06).multiplyScalar(C))
   const fade = (d: number) => MathUtils.smoothstep(d, 0, 0.5 * C)
   const moving = [
-    { mesh: drops, paths: waterPaths, speed: 1.2 * C, jitter: 1 },
-    { mesh: grains, paths: sugarPaths, speed: 0.9 * C, jitter: 0 },
+    { mesh: drops, paths: waterPaths, speed: 1.2 * C, jitter: 1, resolves: true },
+    { mesh: grains, paths: sugarPaths, speed: 0.9 * C, jitter: 0, resolves: false },
   ]
   const sets = [
     { part: water, height: (TRACHEIDS[2].height + 0.05) * C, raised: 0 },
     { part: sugar, height: (SIEVE_HEIGHT + 0.05) * C, raised: 0 },
   ]
+  const at = new Vector3()
+  const next = new Vector3()
   let time = 0
 
-  function update(dt: number, up: boolean[], shown: number) {
+  function molecule(i: number, out: Vector3) {
+    const lane = (i % LANES) - (LANES - 1) / 2
+    const d = (time * 0.35 * C + (Math.floor(i / LANES) / PER_LANE) * stream.length) % stream.length
+    along(stream, d, out)
+    out.x += (lane * 0.075 + Math.sin(time * 3 + i) * 0.006) * C
+    out.y += (-lane * 0.075 + Math.cos(time * 2.3 + i * 1.7) * 0.006) * C
+    out.z += (i % 2) * 0.03 * C
+    return d
+  }
+
+  /** `close` is 0 while the drops show and 1 once they have resolved into molecules. */
+  function update(dt: number, up: boolean[], shown: number, close: number) {
     time += dt
     sets.forEach((set, i) => {
       set.raised = MathUtils.clamp(set.raised + (up[i] ? dt : -dt) / RISE_SECONDS, 0, 1)
@@ -245,20 +273,42 @@ export function createTubes(frame: Frame, radius: number) {
       set.part.position.y = (lift - 1) * set.height
       set.part.visible = lift > 0.001
     })
-    for (const { mesh, paths, speed, jitter } of moving) {
+    for (const { mesh, paths, speed, jitter, resolves } of moving) {
+      const size = resolves ? 1 - close : 1
       const each = mesh.count / paths.length
       for (let i = 0; i < mesh.count; i++) {
         const lane = Math.floor(i / each)
         const path = paths[lane]
         const d = (time * speed + (((i % each) + lane / paths.length) / each) * path.length + i * 0.37 * C * jitter) % path.length
         along(path, d, p).addScaledVector(offsets[i], jitter)
-        mesh.setMatrixAt(i, m.compose(p, q, one.setScalar(fade(d) * fade(path.length - d))))
+        mesh.setMatrixAt(i, m.compose(p, q, one.setScalar(size * fade(d) * fade(path.length - d))))
       }
       one.setScalar(1)
       mesh.instanceMatrix.needsUpdate = true
     }
+    for (const part of [oxygen, hydrogen, bonds]) part.visible = close > 0.01
+    if (!oxygen.visible) return
+    bonds.material.opacity = close
+    const spacing = stream.length / PER_LANE
+    for (let i = 0; i < oxygen.count; i++) {
+      const d = molecule(i, at)
+      const size = close * fade(d * 3) * fade((stream.length - d) * 3)
+      oxygen.setMatrixAt(i, m.compose(at, q, one.setScalar(size)))
+      const turn = i * 1.3 + time * 0.8
+      for (const side of [0, 1]) {
+        const angle = turn + (side ? 0.9 : -0.9)
+        p.set(Math.cos(angle), Math.sin(angle), 0).multiplyScalar(0.028 * C).add(at)
+        hydrogen.setMatrixAt(2 * i + side, m.compose(p, q, one))
+      }
+      const linked = i + LANES < oxygen.count && d + spacing < stream.length && size > 0.01
+      if (linked) molecule(i + LANES, next)
+      bondAt.setXYZ(2 * i, at.x, at.y, at.z)
+      bondAt.setXYZ(2 * i + 1, ...(linked ? next : at).toArray())
+    }
+    one.setScalar(1)
+    oxygen.instanceMatrix.needsUpdate = hydrogen.instanceMatrix.needsUpdate = bondAt.needsUpdate = true
   }
-  update(0, [false, false], 0)
+  update(0, [false, false], 0, 0)
 
   return {
     group,
@@ -273,6 +323,9 @@ export function createTubes(frame: Frame, radius: number) {
       plate: world(xS, PLATES[0], phloemZ),
       companion: world(xK, 1.2, phloemZ),
       sugar: world(xS, 3.4, phloemZ),
+      pitEdge: world((xA + xB) / 2, PITS[0] + PIT_HALF, woodZ),
+      molecules: world((xA + xB) / 2, PITS[0] - 0.12, woodZ),
+      wall: world(xB + 0.42 * C, PITS[0] - PIT_HALF - 0.2, woodZ),
     },
   }
 }

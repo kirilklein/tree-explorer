@@ -1,4 +1,4 @@
-import { Group, type Material, MathUtils, Mesh, MeshStandardMaterial } from 'three'
+import { Group, LineSegments, type Material, MathUtils, Mesh, MeshStandardMaterial } from 'three'
 import type { Pose } from '../../scene/camera'
 import type { View } from '../types'
 import { createBlock } from './block'
@@ -51,6 +51,14 @@ const view: View = {
         'In the phloem, sieve-tube cells sit end to end and form a long sieve tube.',
         'Sugars flow from one cell to the next through the holes in the sieve plates. Pressure pushes the sugar and water down toward the roots.',
         'The sieve-tube cells are alive, but they have lost their nucleus. The companion cells next to them give them energy.',
+      ],
+    },
+    {
+      title: 'Through a pit',
+      text: [
+        'A pit is a place in the side wall where the thick secondary wall is missing.',
+        'Water molecules hold on to each other and to the cell walls.',
+        'The water forms one continuous stream from the base of the tree to the top.',
       ],
     },
   ],
@@ -111,6 +119,9 @@ const view: View = {
         { text: 'Sieve plate', at: tubes.points.plate.toArray(), steps: [4] },
         { text: 'Companion cell', at: tubes.points.companion.toArray(), steps: [4] },
         { text: 'Sugar', at: tubes.points.sugar.toArray(), steps: [4] },
+        { text: 'Pit', at: tubes.points.pitEdge.toArray(), steps: [5] },
+        { text: 'Water molecules', at: tubes.points.molecules.toArray(), steps: [5] },
+        { text: 'Secondary wall', at: tubes.points.wall.toArray(), steps: [5] },
       ],
       update(dt, step, camera) {
         const next = MathUtils.smoothstep(2.15 - camera.position.distanceTo(world.sites.trunk.point), 0, 0.45)
@@ -126,7 +137,8 @@ const view: View = {
         const settled = growth % LOOP === 0
         const near = 1 - MathUtils.smoothstep(camera.position.distanceTo(block.center), 0.4, 0.75)
         block.update(growth, pulse, near * open)
-        tubes.update(dt, [settled && step >= 3, settled && step >= 4], near * open)
+        const close = 1 - MathUtils.smoothstep(camera.position.distanceTo(tubes.points.pit), 0.025, 0.06)
+        tubes.update(dt, [settled && step >= 3, settled && step >= 4], near * open, close)
       },
       dispose() {
         wood.clippingPlanes = before.planes
@@ -135,7 +147,7 @@ const view: View = {
         textures.map.dispose()
         textures.glow.dispose()
         group.traverse((object) => {
-          if (object instanceof Mesh) {
+          if (object instanceof Mesh || object instanceof LineSegments) {
             object.geometry.dispose()
             ;(object.material as Material).dispose()
           }
