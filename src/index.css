@@ -48,6 +48,26 @@ body {
   font-size: 0.9rem;
 }
 
+.narration {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top));
+  right: 16px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(252, 250, 244, 0.94);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.narration.on {
+  background: var(--accent);
+  color: white;
+}
+
 .hotspot {
   position: fixed;
   top: 0;

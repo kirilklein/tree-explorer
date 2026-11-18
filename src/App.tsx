@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Hotspots, type Pin } from './components/Hotspots'
+import { Narration } from './components/Narration'
 import { StepCard } from './components/StepCard'
 import { StopCard } from './components/StopCard'
 import { STOPS } from './data/stops'
@@ -79,6 +80,7 @@ export default function App() {
         <h1>Tree Explorer</h1>
         <p>{route.view ? 'Drag to look around.' : 'Drag to look around. Click a label to zoom in.'}</p>
       </header>
+      <Narration view={view ? route.view : null} step={step} shown={settled} />
       {scene && <Hotspots scene={scene} pins={pins} cover={cardRef} />}
       {route.view
         ? view && (
