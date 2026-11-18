@@ -95,6 +95,7 @@ function leafGeometry(): BufferGeometry {
   const rows = 8
   const cols = 4
   const positions: number[] = []
+  const uvs: number[] = []
   const indices: number[] = []
   for (let r = 0; r <= rows; r++) {
     const t = r / rows
@@ -102,6 +103,7 @@ function leafGeometry(): BufferGeometry {
     for (let c = 0; c <= cols; c++) {
       const u = (c / cols) * 2 - 1
       positions.push(u * width, t, 0.18 * u * u * width + 0.12 * t * t)
+      uvs.push(c / cols, t)
     }
   }
   for (let r = 0; r < rows; r++) {
@@ -113,6 +115,7 @@ function leafGeometry(): BufferGeometry {
   }
   const geometry = new BufferGeometry()
   geometry.setAttribute('position', new Float32BufferAttribute(positions, 3))
+  geometry.setAttribute('uv', new Float32BufferAttribute(uvs, 2))
   geometry.setIndex(indices)
   geometry.computeVertexNormals()
   return geometry

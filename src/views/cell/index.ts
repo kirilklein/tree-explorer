@@ -130,6 +130,7 @@ const view: View = {
       },
       dispose() {
         hide(false)
+        blade.release()
         world.setWind(1)
         free(root)
       },
