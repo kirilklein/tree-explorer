@@ -33,7 +33,7 @@ export function shotAt({ arrival, glide = new Vector3() }: Shot, start: ShotPose
   const y = s.y + (g.y - s.y) * w(p, 0.05, 0.8)
   return {
     position: new Vector3(r * Math.sin(angle), y, r * Math.cos(angle)).addScaledVector(glide, w(p, 0.5, 1)),
-    target: start.target.clone().lerp(arrival.target, w(p, 0, 0.5)),
+    target: start.target.clone().lerp(arrival.target, w(p, 0, 0.55)),
   }
 }
 
