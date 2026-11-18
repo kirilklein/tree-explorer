@@ -31,6 +31,17 @@ export function featuredRoot(roots: Segment[]): FeaturedRoot {
   return { stem, fork, branch, segments }
 }
 
+/** The tree without the roots that grow on from the featured tip, so that the tip is a real end. */
+export function endAtFeaturedTip(tree: Tree): Tree {
+  const beyond = new Set([featuredRoot(tree.roots).segments.at(-1)!.end])
+  const roots = tree.roots.filter((segment) => {
+    if (!beyond.has(segment.start)) return true
+    beyond.add(segment.end)
+    return false
+  })
+  return { ...tree, roots }
+}
+
 function rootTip({ segments }: FeaturedRoot) {
   const last = segments.at(-1)!
   return { tip: last.end, direction: last.end.clone().sub(last.start).normalize(), radius: last.endRadius }
