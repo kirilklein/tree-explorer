@@ -34,9 +34,10 @@ export function leafPlan(leaf: LeafSite, geometry: BufferGeometry) {
   })
   const approach = leaf.shot.arrival.position.clone().sub(leaf.center).normalize()
   const leafUp = new Vector3(0, 1, 0).applyQuaternion(leaf.quaternion)
+  const upper = new Vector3(0, 0, -1).applyQuaternion(leaf.quaternion)
   const [d1, d2, d3, d4] = DISTANCES
   const poses = [
-    pose(leaf.center.clone().addScaledVector(leafUp, -0.04), approach, d1),
+    pose(leaf.center.clone().addScaledVector(leafUp, -0.04), approach.clone().multiplyScalar(0.6).addScaledVector(upper, 0.8).normalize(), d1),
     pose(world(new Vector3(0, -0.5 * C, 0.5 * C)), view, d2),
     pose(world(center), view, d3),
     pose(world(chloroplast), view, d4),

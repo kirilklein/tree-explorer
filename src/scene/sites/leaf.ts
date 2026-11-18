@@ -36,7 +36,8 @@ export function leafSite(tree: Tree) {
   }
   const facing = (i: number) =>
     Math.abs(new Vector3(0, 0, 1).applyQuaternion(tree.leaves[i].quaternion).dot(eye.clone().sub(centers[i]).normalize()))
-  const scores = candidates.map((i) => Math.min(clearance(i), 0.6) + 0.3 * facing(i))
+  const level = (i: number) => new Vector3(0, 0, -1).applyQuaternion(tree.leaves[i].quaternion).y
+  const scores = candidates.map((i) => Math.min(clearance(i), 0.6) + 0.3 * facing(i) + 0.6 * level(i))
   const index = candidates[scores.indexOf(Math.max(...scores))]
   const leaf = tree.leaves[index]
   const center = centers[index]

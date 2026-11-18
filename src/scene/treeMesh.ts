@@ -11,13 +11,13 @@ import {
   Vector3,
 } from 'three'
 import { BARK_TILE } from './bark'
-import { chains, type Segment, type Tree } from './tree'
+import { chains, type Segment, STALK_DEPTH, type Tree } from './tree'
 import { addWind } from './wind'
 
 const RADIAL = 10
-const RING = RADIAL + 1
 
-function woodGeometry(segments: Segment[]): BufferGeometry {
+function woodGeometry(segments: Segment[], sides = RADIAL): BufferGeometry {
+  const ring = sides + 1
   const positions: number[] = []
   const normals: number[] = []
   const sway: number[] = []
@@ -48,21 +48,21 @@ function woodGeometry(segments: Segment[]): BufferGeometry {
       normal.addScaledVector(tangent, -normal.dot(tangent)).normalize()
       binormal.crossVectors(tangent, normal)
       along += p.distanceTo(before)
-      for (let k = 0; k <= RADIAL; k++) {
-        const a = (k / RADIAL) * Math.PI * 2
+      for (let k = 0; k <= sides; k++) {
+        const a = (k / sides) * Math.PI * 2
         radial.copy(normal).multiplyScalar(Math.cos(a)).addScaledVector(binormal, Math.sin(a))
         positions.push(p.x + radial.x * radii[i], p.y + radial.y * radii[i], p.z + radial.z * radii[i])
         normals.push(radial.x, radial.y, radial.z)
         sway.push(sways[i])
-        uvs.push((k / RADIAL) * around, along / BARK_TILE.along)
+        uvs.push((k / sides) * around, along / BARK_TILE.along)
       }
     })
 
     for (let i = 0; i < points.length - 1; i++) {
-      for (let k = 0; k < RADIAL; k++) {
-        const a = base + i * RING + k
+      for (let k = 0; k < sides; k++) {
+        const a = base + i * ring + k
         const b = a + 1
-        indices.push(a, b, a + RING, b, b + RING, a + RING)
+        indices.push(a, b, a + ring, b, b + ring, a + ring)
       }
     }
 
@@ -74,8 +74,8 @@ function woodGeometry(segments: Segment[]): BufferGeometry {
       normals.push(tangent.x, tangent.y, tangent.z)
       sway.push(sways[i])
       uvs.push(0, 0)
-      for (let k = 0; k < RADIAL; k++) {
-        const a = base + i * RING + k
+      for (let k = 0; k < sides; k++) {
+        const a = base + i * ring + k
         const b = a + 1
         indices.push(...(flip ? [center, b, a] : [center, a, b]))
       }
@@ -124,6 +124,13 @@ function leafGeometry(): BufferGeometry {
 export function createTreeMeshes(tree: Tree, featured: Set<Segment>) {
   const wood = new Mesh(woodGeometry(tree.branches), new MeshStandardMaterial({ color: '#7b5b45', roughness: 0.9 }))
   addWind(wood, false)
+  const twigs = new Mesh(woodGeometry(tree.twigs.filter((t) => t.depth !== STALK_DEPTH), 5), wood.material)
+  addWind(twigs, false)
+  const stalks = new Mesh(
+    woodGeometry(tree.twigs.filter((t) => t.depth === STALK_DEPTH), 5),
+    new MeshStandardMaterial({ color: '#8fae5e', roughness: 0.8 }),
+  )
+  addWind(stalks, false)
 
   const roots = new Mesh(
     woodGeometry(tree.roots.filter((s) => !featured.has(s))),
@@ -156,10 +163,10 @@ export function createTreeMeshes(tree: Tree, featured: Set<Segment>) {
   })
   addWind(leaves, true)
 
-  for (const mesh of [wood, roots, featuredRoot, leaves]) {
+  for (const mesh of [wood, twigs, stalks, roots, featuredRoot, leaves]) {
     mesh.castShadow = true
     mesh.receiveShadow = true
   }
   leaves.receiveShadow = false
-  return { wood, roots, featuredRoot, leaves }
+  return { wood, twigs, stalks, roots, featuredRoot, leaves }
 }
