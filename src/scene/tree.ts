@@ -1,4 +1,4 @@
-import { Quaternion, Vector3 } from 'three'
+import { Matrix4, Quaternion, Vector3 } from 'three'
 
 export interface Segment {
   start: Vector3
@@ -15,11 +15,15 @@ export interface Leaf {
   quaternion: Quaternion
   scale: number
   sway: number
+  /** The point on its twig that the leaf's stalk grows from. */
+  twig: Vector3
 }
 
 export interface Tree {
   branches: Segment[]
   roots: Segment[]
+  /** Leaf stalks and short leafy spurs: too fine to count as branches. */
+  twigs: Segment[]
   leaves: Leaf[]
 }
 
@@ -50,7 +54,6 @@ export function generateTree(seed = 7): Tree {
   const range = (min: number, max: number) => min + (max - min) * rand()
   const branches: Segment[] = []
   const roots: Segment[] = []
-  const leafSites: { position: Vector3; dir: Vector3; sway: number }[] = []
 
   const jitter = (dir: Vector3, amount: number) =>
     dir.add(new Vector3(range(-1, 1), range(-1, 1), range(-1, 1)).multiplyScalar(amount)).normalize()
@@ -87,7 +90,6 @@ export function generateTree(seed = 7): Tree {
         side.y += 0.2
         shoots.push([end, side.normalize(), nextSway])
       }
-      if (depth >= MAX_DEPTH - 1) leafSites.push({ position: end, dir: d.clone(), sway: nextSway })
       p = end
       s = nextSway
     }
@@ -157,21 +159,58 @@ export function generateTree(seed = 7): Tree {
   growRoot(new Vector3(0, -0.4, 0), new Vector3(0, -1, 0), 2.2, 0.26, 1)
 
   const leaves: Leaf[] = []
-  const perSite = (i: number) => Math.floor(((i + 1) * MAX_LEAVES) / leafSites.length) - Math.floor((i * MAX_LEAVES) / leafSites.length)
-  leafSites.forEach((site, i) => {
-    for (let k = 0; k < perSite(i); k++) {
-      const position = site.position
-        .clone()
-        .add(new Vector3(range(-1, 1), range(-0.6, 1), range(-1, 1)).multiplyScalar(0.5))
-      const dir = jitter(site.dir.clone().add(new Vector3(0, 0.4, 0)), 0.9)
-      const quaternion = new Quaternion()
-        .setFromUnitVectors(UP, dir)
-        .multiply(new Quaternion().setFromAxisAngle(UP, range(0, Math.PI * 2)))
-      leaves.push({ position, quaternion, scale: range(0.4, 0.58), sway: site.sway })
-    }
-  })
+  const twigs: Segment[] = []
+  let around = 0
 
-  return { branches, roots, leaves }
+  /** One leaf on a stalk, at the share `t` along the twig; `along` leans it towards the twig's tip. */
+  function leafOn(twig: Segment, t: number, along: number) {
+    if (leaves.length >= MAX_LEAVES) return
+    const axis = twig.end.clone().sub(twig.start).normalize()
+    around += 2.39996
+    const out = turn(axis, Math.PI / 2, around)
+    const sway = twig.startSway + (twig.endSway - twig.startSway) * t
+    const node = twig.start.clone().lerp(twig.end, t).addScaledVector(out, twig.startRadius + (twig.endRadius - twig.startRadius) * t)
+    const dir = jitter(out.multiplyScalar(1 - along).addScaledVector(axis, along).add(new Vector3(0, 0.2, 0)), 0.2)
+    const position = node.clone().addScaledVector(dir, range(0.06, 0.1))
+    const face = UP.clone().addScaledVector(dir, -dir.y)
+    if (face.lengthSq() < 1e-4) face.set(1, 0, 0).addScaledVector(dir, -dir.x)
+    face.normalize().applyAxisAngle(dir, range(-0.5, 0.5))
+    const quaternion = new Quaternion().setFromRotationMatrix(new Matrix4().makeBasis(new Vector3().crossVectors(dir, face), dir, face))
+    leaves.push({ position, quaternion, scale: range(0.4, 0.58), sway, twig: node })
+    twigs.push({ start: node, end: position, startRadius: 0.008, endRadius: 0.005, depth: MAX_DEPTH + 2, startSway: sway, endSway: sway })
+  }
+
+  function spurOn(twig: Segment) {
+    const t = range(0.25, 0.9)
+    const axis = twig.end.clone().sub(twig.start).normalize()
+    const dir = turn(axis, range(0.6, 1.0), range(0, Math.PI * 2))
+    dir.y += 0.15
+    const start = twig.start.clone().lerp(twig.end, t)
+    const length = range(0.25, 0.4)
+    const sway = twig.startSway + (twig.endSway - twig.startSway) * t
+    const spur: Segment = {
+      start,
+      end: start.clone().addScaledVector(dir.normalize(), length),
+      startRadius: 0.012,
+      endRadius: 0.006,
+      depth: MAX_DEPTH + 1,
+      startSway: sway,
+      endSway: sway + length * MAX_DEPTH,
+    }
+    twigs.push(spur)
+    for (const at of [0.35, 0.65, 0.95]) leafOn(spur, at, 0.45)
+    leafOn(spur, 1, 0.95)
+  }
+
+  const starts = new Set(branches.map((b) => b.start))
+  for (const twig of branches.filter((b) => b.depth >= MAX_DEPTH - 1)) {
+    const last = twig.depth === MAX_DEPTH
+    if (last) for (const at of [0.3, 0.8]) leafOn(twig, at, 0.45)
+    if (last && !starts.has(twig.end)) leafOn(twig, 1, 0.95)
+    if (rand() < (last ? 0.4 : 0.5)) spurOn(twig)
+  }
+
+  return { branches, roots, twigs, leaves }
 }
 
 export function chains(segments: Segment[]): Segment[][] {
