@@ -13,7 +13,7 @@ import { FILES, HAIR_FILE, RINGS, waterPath } from './uptake'
 
 const root = SITES.root
 const peel = root.shot.peel!
-const { stone } = createGround(peel.wall)
+const { stone } = createGround(peel.wall, root.stone, root.stoneTurn)
 const site: Site = { ...root, stone }
 const fungus = createHyphae(site)
 const steps = rockPoses(site, fungus.featured, fungus.contact, fungus.normal)

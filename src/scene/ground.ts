@@ -1,5 +1,5 @@
-import { BoxGeometry, Group, IcosahedronGeometry, Mesh, MeshStandardMaterial } from 'three'
-import { SOIL_DEPTH, SOIL_HALF_SIZE } from './tree'
+import { BoxGeometry, Group, IcosahedronGeometry, Line3, Mesh, MeshStandardMaterial, Vector3 } from 'three'
+import { type Segment, SOIL_DEPTH, SOIL_HALF_SIZE } from './tree'
 
 const LAYERS: [top: number, bottom: number, color: string, cut: boolean][] = [
   [0, -0.22, '#7fae5a', true],
@@ -17,7 +17,20 @@ const STONES: [x: number | 'wall', y: number, z: number, size: number][] = [
   [1.4, -2.0, 0, 0.36],
 ]
 
-export function createGround(openWall: number) {
+/** The nearest place along the stone's wall where no root runs through it. */
+function clearOf(roots: Segment[], at: Vector3, size: number, along: 'x' | 'z') {
+  const near = new Vector3()
+  const free = (p: Vector3) =>
+    roots.every((r) => new Line3(r.start, r.end).closestPointToPoint(p, true, near).distanceTo(p) > size * 1.3 + r.startRadius)
+  for (let k = 0; k < 24; k++) {
+    const p = at.clone()
+    p[along] += Math.ceil(k / 2) * 0.3 * (k % 2 ? 1 : -1)
+    if (free(p)) return p
+  }
+  return at
+}
+
+export function createGround(openWall: number, stoneAt: Vector3, stoneTurn: number, roots: Segment[] = []) {
   const s = SOIL_HALF_SIZE
   const box = new BoxGeometry()
   const ground = new Group()
@@ -49,7 +62,7 @@ export function createGround(openWall: number) {
   const stoneMaterial = new MeshStandardMaterial({ color: '#9b9a94', roughness: 0.85 })
   STONES.forEach(([x, y, z, size], i) => {
     const stone = new Mesh(stoneGeometry, stoneMaterial)
-    stone.position.set(x === 'wall' ? openWall : x, y, z)
+    stone.position.copy(clearOf(roots, new Vector3(x === 'wall' ? openWall : x, y, z), size, x === 'wall' ? 'z' : 'x'))
     stone.scale.set(size * 1.3, size * 0.8, size)
     stone.rotation.set(i, i * 2.1, i * 0.7)
     stone.castShadow = true
@@ -57,9 +70,9 @@ export function createGround(openWall: number) {
   })
 
   const stone = new Mesh(stoneGeometry, stoneMaterial)
-  stone.position.set(openWall - 0.25, LAYERS[2][1] + 0.32, 3)
+  stone.position.copy(stoneAt)
   stone.scale.set(0.52, 0.32, 0.4)
-  stone.rotation.y = 0.3
+  stone.rotation.y = stoneTurn
   stone.castShadow = true
   stone.receiveShadow = true
   ground.add(stone)
