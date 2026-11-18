@@ -4,6 +4,7 @@ import { Narration } from './components/Narration'
 import { StepCard } from './components/StepCard'
 import { StopCard } from './components/StopCard'
 import { STOPS } from './data/stops'
+import { initialLang, LANGS, remember, translator } from './i18n'
 import { parseRoute } from './route'
 import { createScene, type SceneHandle } from './scene/createScene'
 import { VIEWS } from './views'
@@ -15,6 +16,8 @@ export default function App() {
   const [scene, setScene] = useState<SceneHandle | null>(null)
   const [route, setRoute] = useState(() => parseRoute(location.hash))
   const [settled, setSettled] = useState(true)
+  const [lang, setLang] = useState(initialLang)
+  const t = useMemo(() => translator(lang), [lang])
   const [active, setActive] = useState<{ view: View; instance: ViewInstance } | null>(null)
   const { stop } = route
   const view = active?.view
@@ -68,19 +71,37 @@ export default function App() {
   }, [scene, route, view])
 
   const pins = useMemo<Pin[]>(() => {
-    if (instance) return settled ? (instance.labels ?? []).filter((label) => !label.steps || label.steps.includes(step)) : []
+    if (instance) {
+      const shown = (instance.labels ?? []).filter((label) => !label.steps || label.steps.includes(step))
+      return settled ? shown.map((label) => ({ ...label, text: t(label.text) })) : []
+    }
     if (!scene || route.view || !settled) return []
-    return STOPS.map((s) => ({ text: s.label, at: s.anchor, href: s === stop ? `#/${s.id}/inside` : `#/${s.id}`, active: s === stop }))
-  }, [scene, instance, step, route.view, stop, settled])
+    return STOPS.map((s) => ({ text: t(s.label), at: s.anchor, href: s === stop ? `#/${s.id}/inside` : `#/${s.id}`, active: s === stop }))
+  }, [scene, instance, step, route.view, stop, settled, t])
 
   return (
     <>
       <div className="scene" ref={mountRef} />
       <header className="title">
         <h1>Tree Explorer</h1>
-        <p>{route.view ? 'Drag to look around.' : 'Drag to look around. Click a label to zoom in.'}</p>
+        <p>{route.view ? t('Drag to look around.') : t('Drag to look around. Click a label to zoom in.')}</p>
       </header>
-      <Narration view={view ? route.view : null} step={step} shown={settled} />
+      <nav className="langs">
+        {LANGS.map(({ id, label }) => (
+          <button
+            key={id}
+            className={id === lang ? 'on' : undefined}
+            aria-pressed={id === lang}
+            onClick={() => {
+              setLang(id)
+              remember(id)
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
+      <Narration view={view ? route.view : null} step={step} shown={settled} t={t} />
       {scene && <Hotspots scene={scene} pins={pins} cover={cardRef} />}
       {route.view
         ? view && (
@@ -90,13 +111,14 @@ export default function App() {
               step={step}
               stop={stop}
               waiting={!settled}
+              t={t}
               ref={cardRef}
             />
           )
-        : stop && <StopCard key={stop.id} stop={stop} waiting={!settled} ref={cardRef} />}
+        : stop && <StopCard key={stop.id} stop={stop} waiting={!settled} t={t} ref={cardRef} />}
       {!stop && !route.view && settled && (
         <a className="water-button" href="#/water">
-          Follow the water
+          {t('Follow the water')}
         </a>
       )}
     </>
