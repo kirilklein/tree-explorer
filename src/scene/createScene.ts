@@ -60,7 +60,7 @@ export function createScene(container: HTMLElement) {
   meshes.leaves.material.map = leafTexture()
   const skin = rootTexture()
   for (const root of [meshes.roots, meshes.featuredRoot]) addDetail(root.material, skin, 'uv', [1, 9, 70])
-  const { ground, setWalls, stone } = createGround(SITES.root.shot.peel!.wall)
+  const { ground, setWalls, stone } = createGround(SITES.root.shot.peel!.wall, SITES.root.stone, SITES.root.stoneTurn, TREE.roots)
   const [earth, rock] = [soilTexture(), stoneTexture()]
   const textured = new Set<Material>()
   ground.traverse((object) => {

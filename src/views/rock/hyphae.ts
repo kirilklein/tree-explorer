@@ -55,6 +55,6 @@ export function createHyphae({ tip, direction, radius, stone }: Site) {
     contact: contact.point,
     normal,
     hyphaPoint: curves[2].getPointAt(0.3),
-    stonePoint: contact.point.clone().addScaledVector(normal, 0.01),
+    stonePoint: contact.point.clone().addScaledVector(normal, 0.01).addScaledVector(direction, -0.06),
   }
 }

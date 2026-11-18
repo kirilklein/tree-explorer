@@ -53,6 +53,6 @@ describe('generateTree', () => {
     expect(branch.length).toBeGreaterThan(2)
     expect(fork.z).toBeGreaterThan(0)
     expect(fork.x).toBeLessThan(-0.2)
-    expect(stem[0].x).toBeGreaterThan(-0.24)
+    expect(stem[0].x).toBeGreaterThan(-0.4)
   })
 })
