@@ -1,6 +1,5 @@
 import {
   BufferGeometry,
-  CanvasTexture,
   CatmullRomCurve3,
   Color,
   CylinderGeometry,
@@ -12,11 +11,9 @@ import {
   MeshStandardMaterial,
   Object3D,
   type Plane,
-  SRGBColorSpace,
   TubeGeometry,
   Vector3,
 } from 'three'
-import { mulberry32 } from '../../scene/tree'
 import { COLS, ROWS } from './frame'
 import { fade, smooth } from './paint'
 
@@ -106,48 +103,6 @@ function thicken(source: BufferGeometry, sheet: BufferGeometry, half: number) {
   return { upper, under }
 }
 
-function veinTexture() {
-  const size = 1024
-  const canvas = document.createElement('canvas')
-  canvas.width = canvas.height = size
-  const g = canvas.getContext('2d')!
-  const at = (u: number, v: number) => [u * size, (1 - v) * size] as const
-  g.strokeStyle = 'rgba(226, 238, 178, 0.9)'
-  g.lineCap = 'round'
-  g.lineWidth = 18
-  g.beginPath()
-  g.moveTo(...at(0.5, 0))
-  g.lineTo(...at(0.5, 0.94))
-  g.stroke()
-  const veins: [number, number][][] = []
-  for (let k = 0; k < 7; k++) {
-    const v = 0.08 + k * 0.115
-    for (const side of [-1, 1]) {
-      g.lineWidth = 8 - k * 0.6
-      g.beginPath()
-      g.moveTo(...at(0.5, v))
-      g.quadraticCurveTo(...at(0.5 + side * 0.24, v + 0.05), ...at(0.5 + side * 0.46, v + 0.17))
-      g.stroke()
-      veins.push([0.25, 0.5, 0.75].map((s) => [0.5 + side * 0.46 * s, v + 0.17 * s * s + 0.02 * s]))
-    }
-  }
-  const rand = mulberry32(19)
-  g.lineWidth = 2.5
-  g.strokeStyle = 'rgba(226, 238, 178, 0.55)'
-  for (let i = 0; i < 700; i++) {
-    const [u, v] = [rand(), rand() * 0.92]
-    const angle = rand() * Math.PI * 2
-    g.beginPath()
-    g.moveTo(...at(u, v))
-    g.lineTo(...at(u + Math.cos(angle) * 0.035, v + Math.sin(angle) * 0.02))
-    g.stroke()
-  }
-  const texture = new CanvasTexture(canvas)
-  texture.colorSpace = SRGBColorSpace
-  texture.anisotropy = 8
-  return { texture, vein: veins[6][1] }
-}
-
 export function createBlade(leaves: InstancedMesh, index: number, cut: Plane[], half: number) {
   const color = new Color()
   leaves.getColorAt(index, color)
@@ -155,15 +110,10 @@ export function createBlade(leaves: InstancedMesh, index: number, cut: Plane[], 
   const base = { side: DoubleSide, roughness: 0.75, transparent: true, polygonOffset: true, clippingPlanes: cut, clipIntersection: true }
   const blade = new Mesh(
     geometry,
-    new MeshStandardMaterial({ ...base, color, emissive: color, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }),
+    new MeshStandardMaterial({ ...base, color, emissive: color, map: (leaves.material as MeshStandardMaterial).map, polygonOffsetFactor: -1, polygonOffsetUnits: -2 }),
   )
   blade.castShadow = true
   const underside = new Mesh(under, blade.material)
-  const { texture, vein } = veinTexture()
-  const veins = new Mesh(
-    geometry,
-    new MeshStandardMaterial({ ...base, map: texture, depthWrite: false, polygonOffsetFactor: -2, polygonOffsetUnits: -4 }),
-  )
   const light = color.clone().lerp(new Color('#e2eeb2'), 0.55)
   const rib = new CatmullRomCurve3(
     Array.from({ length: ROWS }, (_, r) => new Vector3(0, r / ROWS, 0.12 * (r / ROWS) ** 2 + 0.002)).concat(
@@ -178,14 +128,14 @@ export function createBlade(leaves: InstancedMesh, index: number, cut: Plane[], 
     new CylinderGeometry(0.006, 0.009, 0.17, 12).translate(0, -0.085, 0).rotateX(0.12),
     new MeshStandardMaterial({ color: light, emissive: light, emissiveIntensity: 0.2, roughness: 0.6, transparent: true }),
   )
-  const group = new Group().add(blade, underside, veins, midrib, stalk)
+  const group = new Group().add(blade, underside, midrib, stalk)
   const point = (x: number, y: number, z: number) => {
     const o = new Object3D()
     o.position.set(x, y, z)
     group.add(o)
     return o
   }
-  const [u, t] = [vein[0] * 2 - 1, vein[1]]
+  const [u, t] = [-0.47, 0.4925]
   const w = 0.32 * Math.sin(Math.PI * t * 1.08) ** 0.75
   return {
     group,
@@ -194,10 +144,14 @@ export function createBlade(leaves: InstancedMesh, index: number, cut: Plane[], 
       vein: point(u * w, t, 0.18 * u * u * w + 0.12 * t * t),
       stalk: point(0, -0.12, -0.012),
     },
+    /** Lets go of the texture shared with the crown's leaves, so that freeing the view leaves it alone. */
+    release() {
+      blade.material.map = null
+    },
     update(detail: number) {
       const plain = smooth(detail * 2)
       fade([blade, underside], plain)
-      fade([veins, midrib, stalk], smooth(detail * 2 - 1))
+      fade([midrib, stalk], smooth(detail * 2 - 1))
       ;(blade.material as MeshStandardMaterial).emissiveIntensity = 0.15 * smooth(detail * 2 - 1)
       return plain === 1
     },

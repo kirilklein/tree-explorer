@@ -1,4 +1,4 @@
-import { CanvasTexture, Color, type MeshStandardMaterial, RepeatWrapping, SRGBColorSpace } from 'three'
+import { CanvasTexture, Color, type MeshStandardMaterial, RepeatWrapping, SRGBColorSpace, type Texture } from 'three'
 import { hash, noise } from './bark'
 
 const SIZE = 512
@@ -78,6 +78,34 @@ export const rootTexture = () =>
     return out.setRGB(shade, shade * (1 - 0.03 * patch), shade * (1 - 0.06 * patch))
   })
 
+const VEINS = Array.from({ length: 7 }, (_, k) => 0.08 + k * 0.115).flatMap((start, k) =>
+  [-1, 1].map((side) => ({
+    width: 0.011 - 0.0008 * k,
+    points: Array.from({ length: 13 }, (_, i) => {
+      const t = i / 12
+      return [0.5 + side * (0.48 * t * (1 - t) + 0.46 * t * t), start + 0.1 * t * (1 - t) + 0.17 * t * t]
+    }),
+  })),
+)
+
+const toSegment = (u: number, v: number, [ax, ay]: number[], [bx, by]: number[]) => {
+  const t = Math.min(1, Math.max(0, ((u - ax) * (bx - ax) + (v - ay) * (by - ay)) / ((bx - ax) ** 2 + (by - ay) ** 2)))
+  return Math.hypot(u - ax - t * (bx - ax), v - ay - t * (by - ay))
+}
+
+/** A leaf seen from afar: a pale midrib and side veins on a slightly mottled blade. Not repeating. */
+export const leafTexture = () =>
+  paint((u, v, out) => {
+    let vein = v < 0.94 ? 1 - smooth(Math.abs(u - 0.5), 0.004, 0.02) : 0
+    for (const { width, points } of VEINS) {
+      if (v < points[0][1] - 0.02 || v > points[12][1] + 0.02) continue
+      for (let i = 1; i < points.length; i++) vein = Math.max(vein, 1 - smooth(toSegment(u, v, points[i - 1], points[i]), width * 0.3, width))
+    }
+    const mottle = 0.6 * noise(u, v, 9, 14, 61) + 0.4 * noise(u, v, 40, 60, 62)
+    const shade = MID * (0.88 + 0.2 * mottle) * (1 + 0.32 * vein)
+    return out.setRGB(shade * (1 + 0.06 * vein), shade, shade * (1 - 0.12 * vein))
+  })
+
 type Mapping = 'uv' | 'axis' | 'blend'
 
 /**
@@ -85,7 +113,7 @@ type Mapping = 'uv' | 'axis' | 'blend'
  * detail from far away to close up. `uv` uses the mesh's own coordinates and `scales` are repeats;
  * `axis` and `blend` project the texture from the world axes and `scales` are tile sizes in world units.
  */
-export function addDetail(material: MeshStandardMaterial, texture: CanvasTexture, mapping: Mapping, scales: number[]) {
+export function addDetail(material: MeshStandardMaterial, texture: Texture, mapping: Mapping, scales: number[]) {
   material.map = texture
   const at = (coords: string) =>
     scales.map((s) => `(texture2D(map, ${coords} ${mapping === 'uv' ? '*' : '/'} ${s.toFixed(4)}).rgb / ${MID.toFixed(2)})`).join(' * ')

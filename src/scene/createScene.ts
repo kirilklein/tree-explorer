@@ -21,7 +21,7 @@ import { createGround } from './ground'
 import { advance, CUT_LAYERS, SHOT_SECONDS, type Shot, type ShotPose, shotAt, wallsAt } from './shot'
 import { SITES, TREE } from './sites'
 import { applyBark } from './bark'
-import { addDetail, rootTexture, soilTexture, stoneTexture } from './surface'
+import { addDetail, leafTexture, rootTexture, soilTexture, stoneTexture } from './surface'
 import { createTreeMeshes } from './treeMesh'
 import { windAmount, windTime } from './wind'
 
@@ -57,6 +57,7 @@ export function createScene(container: HTMLElement) {
 
   const meshes = createTreeMeshes(TREE, new Set(SITES.root.featured.segments))
   applyBark(meshes.wood.material)
+  meshes.leaves.material.map = leafTexture()
   const skin = rootTexture()
   for (const root of [meshes.roots, meshes.featuredRoot]) addDetail(root.material, skin, 'uv', [1, 9, 70])
   const { ground, setWalls, stone } = createGround(SITES.root.shot.peel!.wall)
