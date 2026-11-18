@@ -121,7 +121,7 @@ function leafGeometry(): BufferGeometry {
 export function createTreeMeshes(tree: Tree, featured: Set<Segment>) {
   const stems = tree.leaves.flatMap((leaf, i): Segment[] => {
     const along = leaf.position.clone().sub(leaf.twig)
-    const bend = new Vector3(Math.sin(i * 2.4), -0.6, Math.cos(i * 1.7)).cross(along).multiplyScalar(0.22)
+    const bend = new Vector3(Math.sin(i * 2.4), -0.6, Math.cos(i * 1.7)).cross(along).multiplyScalar(0.1)
     const middle = leaf.twig.clone().addScaledVector(along, 0.5).add(bend)
     const part = { depth: -1, startSway: leaf.sway, endSway: leaf.sway }
     return [
