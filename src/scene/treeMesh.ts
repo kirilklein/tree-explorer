@@ -119,8 +119,20 @@ function leafGeometry(): BufferGeometry {
 }
 
 export function createTreeMeshes(tree: Tree, featured: Set<Segment>) {
+  const stems = tree.leaves.flatMap((leaf, i): Segment[] => {
+    const along = leaf.position.clone().sub(leaf.twig)
+    const bend = new Vector3(Math.sin(i * 2.4), -0.6, Math.cos(i * 1.7)).cross(along).multiplyScalar(0.22)
+    const middle = leaf.twig.clone().addScaledVector(along, 0.5).add(bend)
+    const part = { depth: -1, startSway: leaf.sway, endSway: leaf.sway }
+    return [
+      { ...part, start: leaf.twig, end: middle, startRadius: 0.01, endRadius: 0.007 },
+      { ...part, start: middle, end: leaf.position, startRadius: 0.007, endRadius: 0.004 },
+    ]
+  })
   const wood = new Mesh(woodGeometry(tree.branches), new MeshStandardMaterial({ color: '#7b5b45', roughness: 0.9 }))
   addWind(wood, false)
+  const twigs = new Mesh(woodGeometry(stems), wood.material)
+  addWind(twigs, false)
 
   const roots = new Mesh(
     woodGeometry(tree.roots.filter((s) => !featured.has(s))),
@@ -153,10 +165,10 @@ export function createTreeMeshes(tree: Tree, featured: Set<Segment>) {
   })
   addWind(leaves, true)
 
-  for (const mesh of [wood, roots, featuredRoot, leaves]) {
+  for (const mesh of [wood, twigs, roots, featuredRoot, leaves]) {
     mesh.castShadow = true
     mesh.receiveShadow = true
   }
   leaves.receiveShadow = false
-  return { wood, roots, featuredRoot, leaves }
+  return { wood, twigs, roots, featuredRoot, leaves }
 }

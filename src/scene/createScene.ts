@@ -68,7 +68,7 @@ export function createScene(container: HTMLElement) {
     if (object.geometry instanceof IcosahedronGeometry) addDetail(object.material, rock, 'blend', [0.6, 0.06, 0.006])
     else addDetail(object.material, earth, 'axis', [2.3, 0.21, 0.023])
   })
-  scene.add(meshes.wood, meshes.roots, meshes.featuredRoot, meshes.leaves, ground)
+  scene.add(meshes.wood, meshes.twigs, meshes.roots, meshes.featuredRoot, meshes.leaves, ground)
   let windGoal = 1
   const world: World = {
     tree: TREE,

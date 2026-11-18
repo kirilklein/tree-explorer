@@ -15,6 +15,8 @@ export interface Leaf {
   quaternion: Quaternion
   scale: number
   sway: number
+  /** The point on its twig that the leaf grows from. */
+  twig: Vector3
 }
 
 export interface Tree {
@@ -167,7 +169,7 @@ export function generateTree(seed = 7): Tree {
       const quaternion = new Quaternion()
         .setFromUnitVectors(UP, dir)
         .multiply(new Quaternion().setFromAxisAngle(UP, range(0, Math.PI * 2)))
-      leaves.push({ position, quaternion, scale: range(0.4, 0.58), sway: site.sway })
+      leaves.push({ position, quaternion, scale: range(0.4, 0.58), sway: site.sway, twig: site.position })
     }
   })
 
