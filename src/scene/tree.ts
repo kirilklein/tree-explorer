@@ -32,6 +32,12 @@ export const SOIL_HALF_SIZE = 7
 export const SOIL_DEPTH = 3.6
 
 const MAX_DEPTH = 4
+/** The depth that marks a leaf stalk among the twigs. */
+export const STALK_DEPTH = MAX_DEPTH + 2
+/** The longest leaf stalk. */
+export const STALK = 0.14
+/** Leaves grow straight from a twig only where it is thinner than this. */
+const THIN = 0.03
 const LENGTHS = [3.4, 3.0, 1.9, 1.25, 0.8]
 const SPREAD = [0, 0.75, 0.6, 0.65, 0.6]
 const TROPISM = [0.04, 0.03, 0.05, 0.02, -0.05]
@@ -171,13 +177,14 @@ export function generateTree(seed = 7): Tree {
     const sway = twig.startSway + (twig.endSway - twig.startSway) * t
     const node = twig.start.clone().lerp(twig.end, t).addScaledVector(out, twig.startRadius + (twig.endRadius - twig.startRadius) * t)
     const dir = jitter(out.multiplyScalar(1 - along).addScaledVector(axis, along).add(new Vector3(0, 0.2, 0)), 0.2)
-    const position = node.clone().addScaledVector(dir, range(0.06, 0.1))
+    const position = node.clone().addScaledVector(dir, range(0.08, STALK))
+    // The leaf mesh has its upper side on local -Z.
     const face = UP.clone().addScaledVector(dir, -dir.y)
     if (face.lengthSq() < 1e-4) face.set(1, 0, 0).addScaledVector(dir, -dir.x)
-    face.normalize().applyAxisAngle(dir, range(-0.5, 0.5))
+    face.normalize().applyAxisAngle(dir, range(-0.5, 0.5)).negate()
     const quaternion = new Quaternion().setFromRotationMatrix(new Matrix4().makeBasis(new Vector3().crossVectors(dir, face), dir, face))
     leaves.push({ position, quaternion, scale: range(0.4, 0.58), sway, twig: node })
-    twigs.push({ start: node, end: position, startRadius: 0.008, endRadius: 0.005, depth: MAX_DEPTH + 2, startSway: sway, endSway: sway })
+    twigs.push({ start: node, end: position, startRadius: 0.0035, endRadius: 0.002, depth: STALK_DEPTH, startSway: sway, endSway: sway })
   }
 
   function spurOn(twig: Segment) {
@@ -191,8 +198,8 @@ export function generateTree(seed = 7): Tree {
     const spur: Segment = {
       start,
       end: start.clone().addScaledVector(dir.normalize(), length),
-      startRadius: 0.012,
-      endRadius: 0.006,
+      startRadius: 0.007,
+      endRadius: 0.003,
       depth: MAX_DEPTH + 1,
       startSway: sway,
       endSway: sway + length * MAX_DEPTH,
@@ -203,11 +210,10 @@ export function generateTree(seed = 7): Tree {
   }
 
   const starts = new Set(branches.map((b) => b.start))
-  for (const twig of branches.filter((b) => b.depth >= MAX_DEPTH - 1)) {
-    const last = twig.depth === MAX_DEPTH
-    if (last) for (const at of [0.3, 0.8]) leafOn(twig, at, 0.45)
-    if (last && !starts.has(twig.end)) leafOn(twig, 1, 0.95)
-    if (rand() < (last ? 0.4 : 0.5)) spurOn(twig)
+  for (const twig of branches.filter((b) => b.depth === MAX_DEPTH)) {
+    if (twig.endRadius < THIN) for (const at of [0.3, 0.8]) leafOn(twig, at, 0.45)
+    if (!starts.has(twig.end)) leafOn(twig, 1, 0.95)
+    if (rand() < 0.7) spurOn(twig)
   }
 
   return { branches, roots, twigs, leaves }

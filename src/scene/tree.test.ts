@@ -1,7 +1,7 @@
 import { Line3, Vector3 } from 'three'
 import { describe, expect, it } from 'vitest'
 import { featuredRoot } from './sites/root'
-import { generateTree, MAX_LEAVES } from './tree'
+import { generateTree, MAX_LEAVES, STALK } from './tree'
 
 describe('generateTree', () => {
   const tree = generateTree(7)
@@ -31,7 +31,7 @@ describe('generateTree', () => {
       return Math.abs(line.at(t, new Vector3()).distanceTo(p) - (s.startRadius + (s.endRadius - s.startRadius) * t))
     }
     for (const leaf of tree.leaves) {
-      expect(leaf.position.distanceTo(leaf.twig)).toBeLessThanOrEqual(0.1 + 1e-9)
+      expect(leaf.position.distanceTo(leaf.twig)).toBeLessThanOrEqual(STALK + 1e-9)
       expect(Math.min(...hosts.filter((s) => s.start.distanceTo(leaf.twig) < 1).map((s) => offSurface(leaf.twig, s)))).toBeLessThan(1e-4)
       const tip = new Vector3(0, 1, 0).applyQuaternion(leaf.quaternion)
       expect(tip.dot(leaf.position.clone().sub(leaf.twig).normalize())).toBeCloseTo(1, 6)

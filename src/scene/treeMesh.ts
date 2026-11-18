@@ -11,7 +11,7 @@ import {
   Vector3,
 } from 'three'
 import { BARK_TILE } from './bark'
-import { chains, type Segment, type Tree } from './tree'
+import { chains, type Segment, STALK_DEPTH, type Tree } from './tree'
 import { addWind } from './wind'
 
 const RADIAL = 10
@@ -124,8 +124,13 @@ function leafGeometry(): BufferGeometry {
 export function createTreeMeshes(tree: Tree, featured: Set<Segment>) {
   const wood = new Mesh(woodGeometry(tree.branches), new MeshStandardMaterial({ color: '#7b5b45', roughness: 0.9 }))
   addWind(wood, false)
-  const twigs = new Mesh(woodGeometry(tree.twigs, 5), wood.material)
+  const twigs = new Mesh(woodGeometry(tree.twigs.filter((t) => t.depth !== STALK_DEPTH), 5), wood.material)
   addWind(twigs, false)
+  const stalks = new Mesh(
+    woodGeometry(tree.twigs.filter((t) => t.depth === STALK_DEPTH), 5),
+    new MeshStandardMaterial({ color: '#8fae5e', roughness: 0.8 }),
+  )
+  addWind(stalks, false)
 
   const roots = new Mesh(
     woodGeometry(tree.roots.filter((s) => !featured.has(s))),
@@ -158,10 +163,10 @@ export function createTreeMeshes(tree: Tree, featured: Set<Segment>) {
   })
   addWind(leaves, true)
 
-  for (const mesh of [wood, twigs, roots, featuredRoot, leaves]) {
+  for (const mesh of [wood, twigs, stalks, roots, featuredRoot, leaves]) {
     mesh.castShadow = true
     mesh.receiveShadow = true
   }
   leaves.receiveShadow = false
-  return { wood, twigs, roots, featuredRoot, leaves }
+  return { wood, twigs, stalks, roots, featuredRoot, leaves }
 }
