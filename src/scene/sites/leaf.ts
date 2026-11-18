@@ -36,8 +36,9 @@ export function leafSite(tree: Tree) {
   }
   const facing = (i: number) =>
     Math.abs(new Vector3(0, 0, 1).applyQuaternion(tree.leaves[i].quaternion).dot(eye.clone().sub(centers[i]).normalize()))
-  const level = (i: number) => new Vector3(0, 0, -1).applyQuaternion(tree.leaves[i].quaternion).y
-  const scores = candidates.map((i) => Math.min(clearance(i), 0.6) + 0.3 * facing(i) + 0.8 * level(i))
+  // How far the leaf's upper side faces the sky at the edge where the Leaves view cuts into it.
+  const level = (i: number) => new Vector3(0.32, 0.29, -0.9).applyQuaternion(tree.leaves[i].quaternion).y
+  const scores = candidates.map((i) => Math.min(clearance(i), 0.6) + 0.3 * facing(i) + level(i))
   const index = candidates[scores.indexOf(Math.max(...scores))]
   const leaf = tree.leaves[index]
   const center = centers[index]
