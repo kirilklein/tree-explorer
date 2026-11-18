@@ -5,7 +5,6 @@ export const BARK_TILE = { around: 0.45, along: 0.9 }
 
 const WIDTH = 512
 const HEIGHT = 1024
-const RIDGES = 6
 
 export const hash = (x: number, y: number, seed: number) => {
   let h = (x * 374761393 + y * 668265263 + seed * 2147483647) | 0
@@ -28,14 +27,17 @@ const step = (x: number, from: number, to: number) => {
   return t * t * (3 - 2 * t)
 }
 
-/** Height of the bark, 0 in a furrow and 1 on a ridge; repeats in both directions. */
+const ridged = (n: number) => Math.abs(2 * n - 1)
+
+/** Height of the bark, 0 in a furrow and 1 on top of a plate; repeats in both directions. */
 export function barkHeight(u: number, v: number) {
-  const x = u * RIDGES + 1.7 * (noise(u, v, 3, 5, 1) - 0.5) + 0.7 * (noise(u, v, 6, 11, 2) - 0.5)
-  const ridge = 1 - Math.abs(2 * (x - Math.floor(x)) - 1)
-  const width = 0.75 + 0.5 * noise(u, v, 4, 7, 6)
-  const crack = step(noise(u, v, 5, 44, 3), 0.76, 0.84)
-  const grain = 0.82 + 0.18 * noise(u, v, 48, 90, 4)
-  return step(ridge * width, 0.1, 0.62) * (1 - 0.6 * crack) * grain
+  const bend = u + 0.05 * (noise(u, v, 4, 6, 1) - 0.5)
+  const field = 0.6 * noise(bend, v, 9, 3, 2) + 0.4 * noise(bend, v, 17, 7, 3)
+  const furrow = step(ridged(field), 0.0, 0.1 + 0.1 * noise(u, v, 5, 7, 6))
+  const crack = step(ridged(noise(bend, v, 26, 9, 7)), 0.0, 0.08)
+  const level = 0.7 + 0.3 * step(field, 0.35, 0.65)
+  const rough = 0.74 + 0.16 * noise(u, v, 90, 30, 4) + 0.1 * noise(u, v, 150, 260, 8)
+  return furrow * (0.72 + 0.28 * crack) * level * rough
 }
 
 function paint(pixel: (u: number, v: number, out: Color) => Color, srgb: boolean) {
@@ -60,15 +62,17 @@ function paint(pixel: (u: number, v: number, out: Color) => Color, srgb: boolean
 }
 
 export function applyBark(material: MeshStandardMaterial) {
-  const furrow = new Color('#35241a')
-  const ridge = new Color('#84654e')
-  const tint = new Color('#a89480')
+  const furrow = new Color('#33251c')
+  const plate = new Color('#806b58')
+  const pale = new Color('#a39584')
+  const moss = new Color('#5f6248')
   material.map = paint((u, v, out) => {
     const h = barkHeight(u, v)
-    return out.copy(furrow).lerp(ridge, h).lerp(tint, 0.45 * h * h * noise(u, v, 7, 12, 5))
+    out.copy(furrow).lerp(plate, step(h, 0.05, 0.6)).lerp(pale, 0.55 * step(h, 0.6, 0.95) * noise(u, v, 9, 14, 5))
+    return out.lerp(moss, 0.3 * step(noise(u, v, 3, 4, 9), 0.55, 0.8) * h)
   }, true)
   material.bumpMap = paint((u, v, out) => out.setScalar(barkHeight(u, v)), false)
-  material.bumpScale = 1.2
+  material.bumpScale = 3
   material.color.set('#ffffff')
   material.needsUpdate = true
 }
