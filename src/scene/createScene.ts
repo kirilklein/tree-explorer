@@ -3,6 +3,7 @@ import {
   DirectionalLight,
   Fog,
   HemisphereLight,
+  IcosahedronGeometry,
   MathUtils,
   type Material,
   Mesh,
@@ -20,6 +21,7 @@ import { createGround } from './ground'
 import { advance, CUT_LAYERS, SHOT_SECONDS, type Shot, type ShotPose, shotAt, wallsAt } from './shot'
 import { SITES, TREE } from './sites'
 import { applyBark } from './bark'
+import { addDetail, rootTexture, soilTexture, stoneTexture } from './surface'
 import { createTreeMeshes } from './treeMesh'
 import { windAmount, windTime } from './wind'
 
@@ -55,7 +57,17 @@ export function createScene(container: HTMLElement) {
 
   const meshes = createTreeMeshes(TREE, new Set(SITES.root.featured.segments))
   applyBark(meshes.wood.material)
+  const skin = rootTexture()
+  for (const root of [meshes.roots, meshes.featuredRoot]) addDetail(root.material, skin, 'uv', [1, 9, 70])
   const { ground, setWalls, stone } = createGround(SITES.root.shot.peel!.wall)
+  const [earth, rock] = [soilTexture(), stoneTexture()]
+  const textured = new Set<Material>()
+  ground.traverse((object) => {
+    if (!(object instanceof Mesh) || textured.has(object.material)) return
+    textured.add(object.material)
+    if (object.geometry instanceof IcosahedronGeometry) addDetail(object.material, rock, 'blend', [0.6, 0.06, 0.006])
+    else addDetail(object.material, earth, 'axis', [2.3, 0.21, 0.023])
+  })
   scene.add(meshes.wood, meshes.roots, meshes.featuredRoot, meshes.leaves, ground)
   let windGoal = 1
   const world: World = {
