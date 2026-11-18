@@ -19,6 +19,7 @@ import { createCameraRig, OVERVIEW, ratioZoom } from './camera'
 import { createGround } from './ground'
 import { advance, CUT_LAYERS, SHOT_SECONDS, type Shot, type ShotPose, shotAt, wallsAt } from './shot'
 import { SITES, TREE } from './sites'
+import { applyBark } from './bark'
 import { createTreeMeshes } from './treeMesh'
 import { windAmount, windTime } from './wind'
 
@@ -53,6 +54,7 @@ export function createScene(container: HTMLElement) {
   scene.add(sun)
 
   const meshes = createTreeMeshes(TREE, new Set(SITES.root.featured.segments))
+  applyBark(meshes.wood.material)
   const { ground, setWalls, stone } = createGround(SITES.root.shot.peel!.wall)
   scene.add(meshes.wood, meshes.roots, meshes.featuredRoot, meshes.leaves, ground)
   let windGoal = 1
