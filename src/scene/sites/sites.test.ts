@@ -1,6 +1,7 @@
 import { Vector3 } from 'three'
 import { describe, expect, it } from 'vitest'
 import { generateTree } from '../tree'
+import { SITES, TREE } from './index'
 import { leafSite } from './leaf'
 import { trunkSite } from './trunk'
 
@@ -42,5 +43,14 @@ describe('trunk site', () => {
     expect(trunk.point.distanceTo(center)).toBeCloseTo(trunk.radius, 2)
     expect(trunk.point.x).toBeGreaterThan(0)
     expect(trunk.point.z).toBeGreaterThan(0)
+  })
+})
+
+describe('root site', () => {
+  it('ends the featured root at its tip, with no root growing on from it', () => {
+    expect(generateTree().roots.some((s) => s.start.distanceTo(SITES.root.tip) < 1e-9)).toBe(true)
+    expect(TREE.roots.some((s) => s.start.distanceTo(SITES.root.tip) < 1e-9)).toBe(false)
+    expect(TREE.roots.at(-1)).toBeDefined()
+    expect(SITES.root.featured.segments.every((s) => TREE.roots.includes(s))).toBe(true)
   })
 })
