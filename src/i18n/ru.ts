@@ -37,19 +37,19 @@ export const ru: Record<string, string> = {
   'The widest part of a leaf is its blade, the lamina. A stalk, the petiole, attaches it to the stem.':
     'Самая широкая часть листа — листовая пластинка. Черешок прикрепляет её к стеблю.',
   'A midrib runs the length of the leaf and branches to each side into veins.':
-    'Вдоль всего листа проходит главная жилка, от которой в обе стороны отходят боковые жилки.',
+    'Вдоль всего листа проходит центральная жилка, от которой в обе стороны отходят боковые жилки.',
   'The veins bring in water and minerals and carry the products of photosynthesis to the rest of the tree.':
     'По жилкам в лист поступают вода и минеральные вещества, а продукты фотосинтеза уходят в остальные части дерева.',
   'Inside the blade': 'Внутри листовой пластинки',
   'The epidermis, usually one layer of cells, covers both sides of the leaf.': 'Эпидермис, обычно в один слой клеток, покрывает лист с обеих сторон.',
   'Under the upper side stand tightly packed, column-shaped palisade cells. Below them, loosely arranged spongy cells leave air spaces.':
-    'Под верхней стороной плотно стоят вытянутые, как столбики, клетки столбчатой ткани. Ниже рыхло лежат клетки губчатой ткани, между ними остаются воздушные полости.',
+    'Под верхней стороной плотно стоят вытянутые, как столбики, клетки палисадного слоя. Ниже рыхло лежат клетки губчатого слоя, между ними остаются воздушные полости — межклетники.',
   'Both layers hold many chloroplasts.': 'В обоих слоях много хлоропластов.',
   'Gases pass through stomata, pores in the lower epidermis. Two guard cells open and close each one.':
     'Газы проходят через устьица — поры в нижнем эпидермисе. Каждое устьице открывают и закрывают две замыкающие клетки.',
   'One living cell': 'Одна живая клетка',
   'A palisade cell, taken apart. Animal cells have no cell wall, chloroplasts or central vacuole.':
-    'Клетка столбчатой ткани в разобранном виде. У клеток животных нет клеточной стенки, хлоропластов и центральной вакуоли.',
+    'Клетка палисадного слоя в разобранном виде. У клеток животных нет клеточной стенки, хлоропластов и центральной вакуоли.',
   'Cell wall: protects the cell and gives it shape.': 'Клеточная стенка: защищает клетку и придаёт ей форму.',
   'Plasma membrane: controls what passes in and out.': 'Плазматическая мембрана: управляет тем, что входит в клетку и выходит из неё.',
   'Chloroplasts: carry out photosynthesis.': 'Хлоропласты: в них идёт фотосинтез.',
@@ -58,7 +58,7 @@ export const ru: Record<string, string> = {
   "Nucleus: holds the cell's DNA.": 'Ядро: хранит ДНК клетки.',
   "Mitochondria: make ATP, the cell's main energy carrier.": 'Митохондрии: производят АТФ, главный переносчик энергии в клетке.',
   'The chloroplast': 'Хлоропласт',
-  'Inside its double envelope are stacks of disc-shaped thylakoids.': 'Внутри его двойной оболочки лежат стопки дисковидных тилакоидов.',
+  'Inside its double envelope are stacks of disc-shaped thylakoids.': 'Внутри его двойной оболочки лежат стопки дисковидных тилакоидов — граны.',
   'Light, carbon dioxide and water go in. Sugar and oxygen come out.': 'Внутрь поступают свет, углекислый газ и вода. Наружу выходят сахар и кислород.',
   'Yellow: light. Grey: carbon dioxide. Blue: water. Orange: sugar. Red: oxygen.':
     'Жёлтый — свет. Серый — углекислый газ. Синий — вода. Оранжевый — сахар. Красный — кислород.',
@@ -89,11 +89,11 @@ export const ru: Record<string, string> = {
   'Water evaporates from the leaves, and this pulls the water up from the roots.': 'Вода испаряется из листьев, и это тянет воду вверх от корней.',
   'Sugar on its way down': 'Сахар на пути вниз',
   'In the phloem, sieve-tube cells sit end to end and form a long sieve tube.':
-    'Во флоэме клетки ситовидных трубок соединены конец в конец и образуют длинную ситовидную трубку.',
+    'Во флоэме членики ситовидных трубок соединены конец в конец и образуют длинную ситовидную трубку.',
   'Sugars flow from one cell to the next through the holes in the sieve plates. Pressure pushes the sugar and water down toward the roots.':
-    'Сахара перетекают из клетки в клетку через отверстия в ситовидных пластинках. Давление гонит сахар и воду вниз, к корням.',
+    'Сахара перетекают из членика в членик через отверстия в ситовидных пластинках. Давление гонит сахар и воду вниз, к корням.',
   'The sieve-tube cells are alive, but they have lost their nucleus. The companion cells next to them give them energy.':
-    'Клетки ситовидных трубок живые, но ядро они утратили. Энергией их снабжают соседние клетки-спутницы.',
+    'Членики ситовидных трубок живые, но ядро они утратили. Энергией их снабжают соседние клетки-спутницы.',
   'Through a pit': 'Сквозь пору',
   'A pit is a place in the side wall where the thick secondary wall is missing.': 'Пора — это место в боковой стенке, где нет толстой вторичной стенки.',
   'Water molecules hold on to each other and to the cell walls.': 'Молекулы воды держатся друг за друга и за клеточные стенки.',
@@ -109,7 +109,7 @@ export const ru: Record<string, string> = {
   'The fungal partner': 'Гриб-партнёр',
   'Most plants live with fungal partners on their roots, called mycorrhizae.': 'У большинства растений на корнях живут грибы-партнёры; такой союз называют микоризой.',
   'On pines and other forest trees, the fungus wraps the root tip in a sheath, the mantle.':
-    'У сосен и других лесных деревьев гриб окутывает кончик корня чехлом — мантией.',
+    'У сосен и других лесных деревьев гриб окутывает кончик корня грибным чехлом.',
   'Thread-like hyphae spread far beyond the root hairs. They are much finer than roots, and some grow onto grains of rock.':
     'Нитевидные гифы расходятся далеко за пределы корневых волосков. Они гораздо тоньше корней, и некоторые нарастают на частицы горной породы.',
   'Dissolving rock': 'Растворение камня',
@@ -127,28 +127,28 @@ export const ru: Record<string, string> = {
     'В опыте с сосной гриб направлял к частицам, богатым кальцием и магнием, больше сахара дерева, чем к кварцу.',
   'A root hair takes in water': 'Корневой волосок всасывает воду',
   "A root hair is an extension of one cell of the root's outer layer, the epidermis.":
-    'Корневой волосок — это вырост одной клетки наружного слоя корня, эпидермиса.',
+    'Корневой волосок — это вырост одной клетки наружного слоя корня, ризодермы.',
   "Water moves from the soil into the root's cells by osmosis.": 'Вода переходит из почвы в клетки корня путём осмоса.',
   "The root hairs enlarge the root's surface, which greatly helps it absorb water and minerals.":
     'Корневые волоски увеличивают поверхность корня, и это сильно помогает ему поглощать воду и минеральные вещества.',
   'The checkpoint': 'Контрольный пункт',
   'Inside the root, the water crosses the cortex and reaches a ring of cells, the endodermis.':
-    'Внутри корня вода проходит через кору корня и достигает кольца клеток — эндодермы.',
+    'Внутри корня вода проходит через первичную кору и достигает кольца клеток — эндодермы.',
   'A waxy band in the walls of these cells, the Casparian strip, stops water from slipping between them. It has to pass through the cells.':
     'Воскоподобный поясок в стенках этих клеток — поясок Каспари — не даёт воде проскользнуть между ними. Ей приходится идти сквозь клетки.',
   "So the endodermis is a checkpoint for what enters the root's vascular tissue.":
-    'Так эндодерма служит контрольным пунктом для всего, что входит в проводящую ткань корня.',
+    'Так эндодерма служит контрольным пунктом для всего, что входит в проводящие ткани корня.',
   'Inside the ring, the xylem carries the water up into the tree.': 'Внутри кольца ксилема несёт воду вверх, в дерево.',
 
   // Transport view
   'The puzzle': 'Загадка',
   'Coast redwoods grow to nearly 116 metres, and water still reaches their highest leaves.':
-    'Секвойи вечнозелёные вырастают почти до 116 метров, и вода всё равно доходит до самых верхних листьев.',
+    'Секвойи вырастают почти до 116 метров, и вода всё равно доходит до самых верхних листьев.',
   'Gravity pulls on that water the whole way up.': 'Сила тяжести тянет эту воду вниз на всём пути.',
   'Yet lifting it costs the tree no metabolic energy. The pull starts at the top.':
     'И всё же подъём воды не стоит дереву метаболической энергии. Тяга начинается наверху.',
   'At the leaf: the pull starts here': 'В листе: здесь начинается тяга',
-  'Inside the leaf, water evaporates from wet cell walls into air spaces.': 'Внутри листа вода испаряется с влажных клеточных стенок в воздушные полости.',
+  'Inside the leaf, water evaporates from wet cell walls into air spaces.': 'Внутри листа вода испаряется с влажных клеточных стенок в межклетники.',
   'The vapour escapes through pores called stomata. This loss is transpiration.': 'Пар выходит наружу через поры — устьица. Эта потеря воды называется транспирацией.',
   'The evaporation creates tension that pulls on the water in the xylem.': 'Испарение создаёт натяжение, которое тянет воду в ксилеме.',
   'In the wood: one unbroken column': 'В древесине: один неразрывный столб',
@@ -156,7 +156,7 @@ export const ru: Record<string, string> = {
     'Молекулы воды держатся друг за друга (когезия) и за стенки ксилемы (адгезия).',
   'So the water forms one continuous stream from the base to the top, and the pull lifts all of it.':
     'Поэтому вода образует один непрерывный поток от основания до вершины, и тяга поднимает его целиком.',
-  'This is the cohesion–tension theory.': 'Это теория сцепления и натяжения.',
+  'This is the cohesion–tension theory.': 'Это теория когезии и натяжения.',
   'At the roots: water enters': 'В корнях: вода входит',
   'Root cells hold many dissolved substances, so water moves into them from the soil by osmosis.':
     'В клетках корня много растворённых веществ, поэтому вода переходит в них из почвы путём осмоса.',
@@ -166,7 +166,7 @@ export const ru: Record<string, string> = {
   'Sugar, the other way': 'Сахар — в обратную сторону',
   'Leaves make sugars, such as sucrose, by photosynthesis.': 'Листья создают сахара, например сахарозу, в ходе фотосинтеза.',
   'The phloem carries them to where they are used or stored. This is called translocation.':
-    'Флоэма несёт их туда, где они расходуются или запасаются. Это называется транслокацией.',
+    'Флоэма несёт их туда, где они расходуются или запасаются. Это называется флоэмным транспортом.',
   'Lower leaves send sugar down to the roots. Water in the xylem only moves one way: from soil to leaf to air.':
     'Нижние листья отправляют сахар вниз, к корням. Вода в ксилеме движется только в одну сторону: из почвы в лист и в воздух.',
 
@@ -178,18 +178,18 @@ export const ru: Record<string, string> = {
   'Central vacuole': 'Центральная вакуоль',
   Chloroplasts: 'Хлоропласты',
   'Companion cell': 'Клетка-спутница',
-  Cortex: 'Кора корня',
+  Cortex: 'Первичная кора',
   'Dead water-carrying cell': 'Мёртвая водопроводящая клетка',
   Endodermis: 'Эндодерма',
   Envelope: 'Оболочка',
-  Epidermis: 'Эпидермис',
+  Epidermis: 'Ризодерма',
   'Fine roots': 'Тонкие корни',
   'Fungal sheath': 'Грибной чехол',
   Heartwood: 'Ядровая древесина',
   Hyphae: 'Гифы',
   'Leaf stalk': 'Черешок',
   'Living parenchyma': 'Живая паренхима',
-  Midrib: 'Главная жилка',
+  Midrib: 'Центральная жилка',
   Minerals: 'Минеральные вещества',
   Mitochondria: 'Митохондрии',
   'New phloem': 'Новая флоэма',
@@ -197,7 +197,7 @@ export const ru: Record<string, string> = {
   Nucleus: 'Ядро',
   'Outer bark': 'Наружная кора',
   Oxalate: 'Оксалат',
-  'Palisade layer': 'Столбчатая ткань',
+  'Palisade layer': 'Палисадный слой',
   'Phloem: sugar': 'Флоэма: сахар',
   Phloem: 'Флоэма',
   Pit: 'Пора',
@@ -208,13 +208,13 @@ export const ru: Record<string, string> = {
   Sapwood: 'Заболонь',
   'Secondary wall': 'Вторичная стенка',
   'Sieve plate': 'Ситовидная пластинка',
-  'Sieve-tube cell': 'Клетка ситовидной трубки',
-  'Spongy layer': 'Губчатая ткань',
+  'Sieve-tube cell': 'Членик ситовидной трубки',
+  'Spongy layer': 'Губчатый слой',
   Stoma: 'Устьице',
   Stone: 'Камень',
   Sugar: 'Сахар',
   Sugars: 'Сахара',
-  'Thylakoid stacks': 'Стопки тилакоидов',
+  'Thylakoid stacks': 'Граны — стопки тилакоидов',
   Tracheid: 'Трахеида',
   Vein: 'Жилка',
   'Water in the soil': 'Вода в почве',
