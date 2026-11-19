@@ -66,7 +66,7 @@ export const ru: Record<string, string> = {
 
   // Trunk view
   'A window into the trunk': 'Окно в ствол',
-  'The outer bark shields the tree from heat, cold, rain and insects.': 'Наружная кора защищает дерево от жары, холода, дождя и насекомых.',
+  'The outer bark shields the tree from heat, cold, rain and insects.': 'Корка, наружная часть коры, защищает дерево от жары, холода, дождя и насекомых.',
   'The phloem carries food from the leaves to the rest of the tree. The cambium, just inside the phloem, makes new wood and new bark.':
     'Флоэма несёт питательные вещества от листьев к остальным частям дерева. Камбий, лежащий сразу за флоэмой ближе к центру, образует новую древесину и новую кору.',
   'The sapwood carries water up from the roots, and the dead heartwood in the centre holds the tree up.':
@@ -195,7 +195,7 @@ export const ru: Record<string, string> = {
   'New phloem': 'Новая флоэма',
   'New wood': 'Новая древесина',
   Nucleus: 'Ядро',
-  'Outer bark': 'Наружная кора',
+  'Outer bark': 'Корка',
   Oxalate: 'Оксалат',
   'Palisade layer': 'Палисадный слой',
   'Phloem: sugar': 'Флоэма: сахар',
