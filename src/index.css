@@ -29,7 +29,7 @@ body {
   position: fixed;
   top: max(16px, env(safe-area-inset-top));
   left: 16px;
-  max-width: calc(100% - 64px);
+  max-width: calc(100% - 136px);
   padding: 8px 14px;
   border-radius: 14px;
   background: rgba(252, 250, 244, 0.94);
@@ -48,10 +48,38 @@ body {
   font-size: 0.9rem;
 }
 
-.narration {
+.langs {
   position: fixed;
   top: max(16px, env(safe-area-inset-top));
   right: 16px;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(252, 250, 244, 0.94);
+}
+
+.langs button {
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.langs button.on {
+  background: var(--accent);
+  color: white;
+}
+
+.narration {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top));
+  right: 112px;
   padding: 8px 14px;
   border: 0;
   border-radius: 999px;

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import files from '../data/narration-files.json'
+import type { Translate } from '../i18n'
 import type { ViewId } from '../views'
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
   step: number
   /** The step's card is on screen. */
   shown: boolean
+  t: Translate
 }
 
 const KEY = 'narration'
@@ -18,7 +20,7 @@ const remembered = () => {
   }
 }
 
-export function Narration({ view, step, shown }: Props) {
+export function Narration({ view, step, shown, t }: Props) {
   const [on, setOn] = useState(remembered)
   const audio = useRef<HTMLAudioElement>(null)
   const spoken = view ? (files as Record<string, string[]>)[view] : undefined
@@ -45,7 +47,7 @@ export function Narration({ view, step, shown }: Props) {
     <>
       {spoken && (
         <button className={on ? 'narration on' : 'narration'} onClick={toggle} aria-pressed={on}>
-          {on ? 'Narration on' : 'Narration off'}
+          {on ? t('Narration on') : t('Narration off')}
         </button>
       )}
       <audio ref={audio} />
